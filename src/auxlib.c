@@ -16,7 +16,7 @@ LISTA* L_init(){
 
 //insere na lista e retorna posição
 int L_insert(LISTA *lista, void *dado){
-	LISTA add*, *nodo;
+	LISTA *add, *nodo;
 	int iterator=0;
 	
 	nodo=lista;
@@ -37,7 +37,7 @@ int L_insert(LISTA *lista, void *dado){
 		}
 		while(L_vazia(nodo)==0);
 		
-		(*nodo).prox=add;
+		nodo->prox=add;
 		(*add).ant=nodo;
 		
 		return i;
