@@ -3,7 +3,6 @@
 #include "cthread.h"
 #include "cdata.h"
 
-TCB_t TCB;
 
 int ccreate (void* (*start)(void*), void *arg, int prio){
     /*
@@ -27,6 +26,7 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
     }
     return ????? try catch em c wtf
     */
+	
 }
 int csetprio (int tid, int prio){
     /*
@@ -43,6 +43,7 @@ int csetprio (int tid, int prio){
         return -90000;
     }
     */
+	
 }
 int cyield (void){
     /*
@@ -59,6 +60,7 @@ int cyield (void){
         return -9000;
     }
     */
+	
 }
 int cjoin (int tid){
     /*
@@ -76,6 +78,7 @@ int cjoin (int tid){
         return -8000;
     }
     */
+	
 }
 int csem_init (csem_t *sem, int count){
     /*
@@ -84,6 +87,7 @@ int csem_init (csem_t *sem, int count){
     ???????????????????????????????????????????????????????????????????????????
     like, wtf
     */
+	
 }
 int cwait (csem_t *sem){
     /*
@@ -100,6 +104,7 @@ int cwait (csem_t *sem){
         return -50000;
     }
     */
+	
 }
 int csignal (csem_t *sem){
     /*
@@ -118,6 +123,7 @@ int csignal (csem_t *sem){
         return -900;
     }
     */
+	
 }
 int cidentify (char *name, int size){
     /*
@@ -131,4 +137,5 @@ int cidentify (char *name, int size){
         return -70000;
     }
     */
+	
 }
