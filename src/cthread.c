@@ -1,7 +1,6 @@
 #include <stdio.h>
-#include "support.h"
-#include "cthread.h"
-#include "cdata.h"
+#include "../include/cthread.h"
+#include "auxlib.c"
 
 
 int ccreate (void* (*start)(void*), void *arg, int prio){

@@ -1,7 +1,8 @@
-#include "support.h"
-#include "cdata.h"
-#include <ucontext.h>
+#include "../include/support.h"
+#include "../include/cdata.h"
 #include "lista.c"
+
+#include <ucontext.h>
 
 LISTA threads, esperando, semaforos;
 
