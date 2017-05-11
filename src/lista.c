@@ -21,23 +21,23 @@ int insertLista(LISTA *lista, void *dado) {
 
     // inicializa add
     add = malloc(sizeof(LISTA));
-    add.dados = dado;
-    add.ant = NULL;
-    add.prox = NULL;
+    add->dados = dado;
+    add->ant = NULL;
+    add->prox = NULL;
 
     if (emptyLista(lista) == 1) { // se a lista estiver vazia coloca no inicio
-        *lista = add;
+        lista = add;
         return 0;
     } else {
         while (nodo->prox != NULL) { // senao acha o fim
             nodo = nodo->prox;
-            i++;
+            iterator++;
         }
 
         nodo->prox = add; // e coloca no fim
         add->ant = nodo;
 
-        return i + 1;
+        return iterator + 1;
     }
 }
 
@@ -54,9 +54,11 @@ int emptyLista(LISTA *lista) {
 int removeLista(LISTA *lista, int pos) {
     LISTA *nodo;
     nodo = lista;
+    int i;
+
     if (emptyLista(lista) == 0) {
-        for (int i = 0; i < pos; i++) {
-            if (nodo.prox == NULL) {
+        for (i = 0; i < pos; i++) {
+            if (nodo->prox == NULL) {
                 return 0;
             } // fim da lista -> nao ha elemento pos na lista
             else {
@@ -94,6 +96,7 @@ LISTA * getPrevNodeLista(LISTA *lista) {
 LISTA * getFirstNodeLista(LISTA *lista) {
     LISTA *nodo;
     nodo = lista;
+
     if (emptyLista(nodo) == 1)
         return NULL;
     else {
@@ -108,6 +111,7 @@ LISTA * getFirstNodeLista(LISTA *lista) {
 LISTA * getLastNodeLista(LISTA *lista) {
     LISTA *nodo;
     nodo = lista;
+
     if (emptyLista(nodo) == 1) {
         return NULL;
     } else {
@@ -122,9 +126,11 @@ LISTA * getLastNodeLista(LISTA *lista) {
 void destroyLista(LISTA *lista) {
     LISTA *nodo;
     nodo = lista;
+    
     while (nodo->prox != NULL) {
         nodo = nodo->prox;
         free(nodo->ant);
     }
     free(nodo);
 }
+
