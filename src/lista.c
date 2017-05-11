@@ -8,14 +8,12 @@ struct nodoLista {
 typedef struct nodoLista LISTA;
 
 // inicia lista
-LISTA *
-L_init() {
+LISTA * initLista() {
     return NULL;
 }
 
 // insere no fim da lista e retorna posição
-int
-L_insert(LISTA *lista, void *dado) {
+int insertLista(LISTA *lista, void *dado) {
     LISTA *add, *nodo;
     int iterator = 0;
 
@@ -27,7 +25,7 @@ L_insert(LISTA *lista, void *dado) {
     add.ant = NULL;
     add.prox = NULL;
 
-    if (L_vazia(lista) == 1) { // se a lista estiver vazia coloca no inicio
+    if (emptyLista(lista) == 1) { // se a lista estiver vazia coloca no inicio
         *lista = add;
         return 0;
     } else {
@@ -44,85 +42,84 @@ L_insert(LISTA *lista, void *dado) {
 }
 
 // retorna 1 se a lista esta vaiza, senao retorna 0
-int
-L_vazia(LISTA *lista) {
+int emptyLista(LISTA *lista) {
     if (lista == NULL) {
         return 1;
-    } else
+    } else {
         return 0;
+    }
 }
 
 // remove da lista noda na posicao pos, retorna 1 se conseguiu, senao retorna 0
-int
-L_remove(LISTA *lista, int pos) {
+int removeLista(LISTA *lista, int pos) {
     LISTA *nodo;
     nodo = lista;
-    if (L_vazia(lista) == 0) {
+    if (emptyLista(lista) == 0) {
         for (int i = 0; i < pos; i++) {
-            if (nodo.prox == NULL)
-                return 0; // fim da lista -> nao ha elemento pos na lista
-            else
-                nodo = nodo->prox; // pula pro proximos ate chegar em pos
+            if (nodo.prox == NULL) {
+                return 0;
+            } // fim da lista -> nao ha elemento pos na lista
+            else {
+                nodo = nodo->prox;
+            } // pula pro proximos ate chegar em pos
         }
         nodo->ant->prox = nodo->prox;
         nodo->prox->ant = nodo->ant; // encadeia nodos vizinhos
         free(nodo);
         return 1;
-    } else
-        return 0; // lista vazia -> nao ha oq remover
+    } else {
+        return 0;
+    } // lista vazia -> nao ha oq remover
 }
 
 // retorna o dado da lista, senao retorna NULL
-void *
-L_read(LISTA *lista, int pos) {
-    if (L_vazia(lista) == 1)
+void * getNodeLista(LISTA *lista, int pos) {
+    if (emptyLista(lista) == 1) {
         return NULL;
-    else
+    } else {
         return lista->dados;
+    }
 }
 // retorna o proximo nodo
-LISTA *
-L_prox(LISTA *lista) {
+LISTA * getNextNodeLista(LISTA *lista) {
     return lista->prox;
 }
 
 // retorna o nodo anterior
-LISTA *
-L_ant(LISTA *lista) {
+LISTA * getPrevNodeLista(LISTA *lista) {
     return lista->ant;
 }
 
 // retorna o primeiro nodo da lista, senao retorna NULL
-LISTA *
-L_first(LISTA *lista) {
+LISTA * getFirstNodeLista(LISTA *lista) {
     LISTA *nodo;
     nodo = lista;
-    if (L_vazia(nodo) == 1)
+    if (emptyLista(nodo) == 1)
         return NULL;
     else {
-        while (nodo->ant != NULL)
+        while (nodo->ant != NULL) {
             nodo = nodo->ant;
+        }
         return nodo;
     }
 }
 
 // retorna o ultimo nodo da lista, senao retorna NULL
-LISTA *
-L_last(LISTA *lista) {
+LISTA * getLastNodeLista(LISTA *lista) {
     LISTA *nodo;
     nodo = lista;
-    if (L_vazia(nodo) == 1)
+    if (emptyLista(nodo) == 1) {
         return NULL;
-    else {
-        while (nodo->prox != NULL)
+    } else {
+        while (nodo->prox != NULL) {
             nodo = nodo->prox;
+        }
         return nodo;
     }
 }
 
 // destroi a lista
-void
-L_destroy(LISTA *lista) {
+void destroyLista(LISTA *lista) {
     LISTA *nodo;
     nodo = lista;
     while (nodo->prox != NULL) {
