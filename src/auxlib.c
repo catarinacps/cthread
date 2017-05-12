@@ -21,7 +21,7 @@ void dispatcher() {
 
         proxThread->state = 2;
 
-        if ((tidRet = findNodeExec(tidProx)) != -1) {
+        if ((tidRet == findNodeExec(tidProx)) != -1) {
             retThread = findTCB(tidRet);
             retThread->state = 4;
         }
@@ -67,21 +67,17 @@ void initializeLib() {
 
 // diz se a lista de threads está vazia
 int emptyTCBList() {
-    if (threads == NULL) {
-        return 1;
-    } else {
-        return 0;
-    }
+    return emptyLista(threads);
 }
 
 // adiciona um TCB a lista de threads
 void addTCB(TCB_t *tcb) {
-    insertLista(threads, (*void)tcb);
+    threads=insertLista(threads, (void*)tcb);
 }
 
 // retorna o endereço do TCB com a tid se encontrado, senao retorna NULL
 TCB_t *findTCB(int tid) {
-    return (*TCB_t)getNodeLista(threads, tid);
+    return (TCB_t*)getNodeLista(threads, tid);
 }
 
 // troca de fila de prioridades
@@ -89,20 +85,19 @@ void changePrioFIFO(int prio_velha, int prio_nova, int tid) {
     int *dado_tid, achou = 0;
 
     FirstFila2(aptos[prio_velha]); // coloca iterador no inicio da fila
-    dado_tid = malloc(sizeof(int));
 
     do {
-        dado_tid = GetAtIteratorFila2(aptos[prio_velha]);
-        if (*dado_tid = td) {
+        dado_tid = (int*)GetAtIteratorFila2(aptos[prio_velha]);
+        if (*dado_tid == tid) {
             achou = 1;
         } else {
             NextFila2(aptos[prio_velha]);
         }
     } while (achou == 0); // coloca iterador na posicao com tid
 
-    DeleteAtIteratorFila2(aptos[prio_velha]); // remove da lista
+    DeleteAtIteratorFila2(aptos[prio_velha]); // remove da fila
 
-    AppendFila2(aptos[prio_nova], (*void)dado_tid); // adiciona na outra lista
+    AppendFila2(aptos[prio_nova], (void*)dado_tid); // adiciona na outra fila
 }
 
 // retorna 1 se nao ha aptos, senao retorna 0
@@ -129,7 +124,7 @@ int nextApto() {
         FirstFila2(aptos[3]);
         prio = 3;
 	}
-	tid=*((*int)GetAtIteratorFila2(aptos[prio]));
+	tid=*((int*)GetAtIteratorFila2(aptos[prio]));
 	DeleteAtIteraatorFila2(aptos[prio]);
 
 	return tid;
