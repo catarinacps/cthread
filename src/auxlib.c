@@ -21,7 +21,7 @@ void dispatcher() {
 
         proxThread->state = 2;
 
-        if ((tidRet == findNodeExec(tidProx)) != -1) {
+        if ((tidRet = findNodeExec(tidProx)) != -1) {
             retThread = findTCB(tidRet);
             retThread->state = 4;
         }
