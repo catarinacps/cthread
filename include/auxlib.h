@@ -8,6 +8,13 @@
 
 LISTA *threads, *esperando, *semaforos;
 PFILA2 aptos[4];
+
+struct esperanca{
+	int tidEsperado;
+	int tidBloqueado;	//botar TCB*?
+};
+typedef struct esperanca ESPERA;
+
 int lastTid = TID_MAIN;
 int tidExec = TID_MAIN; //pelo menos no inicio
 

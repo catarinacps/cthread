@@ -1,12 +1,11 @@
 #include "../include/auxlib.h"
 
 void dispatcher(int tidTerm) {
-    int tidProx;
     TCB_t *proxThread, *retThread;
 
     if (!emptyAptos()) {
-        tidProx = nextApto();
-        proxThread = findTCB(tidProx);
+        tidExec = nextApto();
+        proxThread = findTCB(tidExec);
 
         proxThread->state = 2;
 
@@ -17,7 +16,7 @@ void dispatcher(int tidTerm) {
 
         setcontext(&(proxThread->context));
     } else {
-        printf("PODE SEPA SER EXECUTADA?VER COM CECHIN FALANDO NISSO EAE "
+        printf("PODE SEPA SER EXECUTADA? VER COM CECHIN FALANDO NISSO EAE "
                "CECHIN BELEZA TUDO BEM COMO FOI O DIA DESTE BELO PROFESSOR "
                "ENSINA MUITO BEM 10/10 <3");
     }

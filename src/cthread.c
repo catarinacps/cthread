@@ -69,6 +69,7 @@ int cyield (void) {
     if (emptyTCB()) {
         return -1;
     } else {
+		ptTidExec=malloc(sizeof(int));
         *ptTidExec = tidExec;
 
         tcbExec = findTCB(tidExec);
@@ -78,7 +79,7 @@ int cyield (void) {
         } else {
             return -1;
         }
-
+		
         if (tcbExec->state == 1) {
             dispatcher(-1);
         }
@@ -87,22 +88,58 @@ int cyield (void) {
 }
 
 int cjoin (int tid) {
-    /*
-    cjoin, primeiramente, checa se a thread especificada já está sendo esperada, o que indica que essa thread não pode ser esperada. Caso contrário, cjoin adiciona a thread indicada e a thread que chamou a função para a lista de esperando????. Além disso, a thread que chamou vai para o estado bloqueado, esperando o término da thread em questão.
-
-    -->lógica:
-    if (!estaNaFila(tid, esperando)){
-        TCBexec.state = bloqueado;
-        TCBexec.context = getcontext();
-
-        appendFila(tid, esperando);
-
-        return 0;
-    } else{
-        return -8000;
-    }
-    */
+    TCB_t *tcbAux;
+	LISTA *nodo;
+	ESPERA *aux;
 	
+	nodo=esperando;
+	
+	if(tcbAux=findTCB(tid)){
+		return -1;
+	}
+	if(tcbAux->state==4){
+		return -1;
+	}
+	
+	if(emptylista(esperando)){
+		//so botar
+		tcbAux=findTCB(tidExec);
+		tcbAux->state=3;
+		
+		aux=malloc(sizeof(ESPERA));
+		aux->tidEsperado=tid;
+		aux->tidBloqueado=tidExec;
+		esperando=insertLista(esperando,(void*)aux);
+		
+		getcontext(&(tcbAux->context));
+		
+		
+	}else{
+		
+		do{
+			aux = (ESPERA *)nodo->dados;
+			nodo = getNextNodeLista(esperando);
+		}while (aux->tidEsperado != tid && nodo != NULL);
+		
+		if(nodo==NULL){
+			//so botar
+			tcbAux=findTCB(tidExec);
+			tcbAux->state=3;
+			
+			aux=malloc(sizeof(ESPERA));
+			aux->tidEsperado=tid;
+			aux->tidBloqueado=tidExec;
+			esperando=insertLista(esperando,(void*)aux);
+		
+			getcontext(&(tcbAux->context));
+		}else{
+			return -1;
+		}
+	}
+	if (tcbAux->state == 3) {
+            dispatcher(-1);
+        }
+	return 	0;
 }
 int csem_init (csem_t *sem, int count){
     /*
