@@ -1,67 +1,92 @@
-#include <stdio.h>
 #include "../include/cthread.h"
-#include "auxlib.c"
+#include "../include/auxlib.h"
 
 
-int ccreate (void* (*start)(void*), void *arg, int prio){
-    /*
-    ccreate, na sua primeira chamada, checa se a TCB já foi inicializada, pois se a TCB não foi ainda inicializada indica que a thread que a chamou é a thread main, o que diz para a biblioteca que a thread main deve ser incluida no escalonador.
+int ccreate (void* (*start)(void*), void *arg, int prio) {
+    TCB_t *tcbMain, *tcbNew;
+    char mainStack[SIGSTKSZ], newStack[SIGSTKSZ];
 
-    Ao terminar de inicializar a thread main no TCB e incluí-la no escalonador (ou não, se a thread main já estiver incluida), a ccreate criará uma nova thread, que, por sua parte, executará uma função apontada por *start.
-
-    -->lógica:
-    if (TCB == NULL){
-        //inicializa TCB com main:
-        tid = 0;
-        state = exec;
-        prio = 0???;
-        context = getcontext();
-    } then {
-        //adiciona para TCB a thread a ser criada
-        tid = ???;
-        state = apto;
-        prio = ???;
-        context: cria a pilha, pega o contexto e faz um makecontext da função que ela vai executar
+    if (prio < 0 || prio > 4) {
+        return -1;
     }
-    return ????? try catch em c wtf
-    */
-	
-}
-int csetprio (int tid, int prio){
-    /*
-    csetprio altera a prioridade da thread com o identificador tid para a nova prioridade prio. Obs: thread que chamou não perde a CPU, ou seja, continua em executando.
+    if (emptyTCBList()) {
+        tcbMain = malloc(sizeof(TCB_t));
 
-    -->lógica:
-    if (procuraNasFilas(filaProcessos, tid) && testaSeDerRuim(tid, prio)){
-        copiaNodo(?);
-        destroiNodo(?);
-        appendNodoNaFilaNovaPossivelmente();
+        tcbMain->tid = getNextTid();
+        tcbMain->state = 2;
+        tcbMain->ticket = 0;
+        if (getcontext(&(tcbMain->context)) != 0) {
+            return -1;
+        }
 
-        return 0;
-    } else{
-        return -90000;
+        setTidExec(tcbMain->tid);
+
+        makecontext(tcbMain->context.uc_link, (void (*)(void)) dispatcher, 1, tcbMain->tid);
+        tcbMain->context.uc_stack.ss_sp = mainStack;
+        tcbMain->context.uc_stack.ss_size = sizeof(mainStack);
+
+        addTCB(tcbMain);
     }
-    */
-	
-}
-int cyield (void){
-    /*
-    cyield salva o contexto da thread em execução, altera seu estado, a coloca em apto e pega a próxima thread na lista de aptos, de acordo com a prioridade da mesma.
 
-    -->lógica:
-    if (!filaVazia(aptos)){
-        TCB.context = getcontext();
-        TCB.state = apto;
-        pegaProximoEColocaEmExecuzao();
+    tcbNew = malloc(sizeof(TCB_t));
+
+    tcbNew->tid = getNextTid();
+    tcbNew->state = 1;
+    tcbNew->ticket = prio;
+    makecontext(&(tcbNew->context), (void (*)(void)) start, 1, arg);
+
+    makecontext(tcbNew->context.uc_link, (void (*)(void)) dispatcher, 1, tcbNew->tid);
+    tcbNew->context.uc_stack.ss_sp = newStack;
+    tcbNew->context.uc_stack.ss_size = sizeof(newStack);
+
+    addTCB(tcbNew);
+
+    return tcbNew->tid;
+}
+
+int csetprio (int tid, int prio) {
+	TCB_t *tcbAux;
+
+    if (prio < 0 || prio > 4) {
+        return -1;
+    }
+    if (tcbAux = findTCB(tid)) {
+        if (tcbAux->state == 1) {
+            changePrioFIFO(tcbAux->ticket, prio, tid);
+        }
+        tcbAux->ticket = prio;
 
         return 1;
-    } else{
-        return -9000;
+    } else {
+        return -1;
     }
-    */
-	
 }
-int cjoin (int tid){
+
+int cyield (void) {
+    int *ptTidExec;
+    TCB_t *tcbExec;
+
+    if (emptyTCB()) {
+        return -1;
+    } else {
+        *ptTidExec = tidExec;
+
+        tcbExec = findTCB(tidExec);
+        if (AppendFila2(aptos[tcbExec->ticket], (void *)ptTidExec) == 0) {
+            tcbExec->state = 1;
+            getcontext(&(tcbExec->context));
+        } else {
+            return -1;
+        }
+
+        if (tcbExec->state == 1) {
+            dispatcher(-1);
+        }
+        return 1;
+    }
+}
+
+int cjoin (int tid) {
     /*
     cjoin, primeiramente, checa se a thread especificada já está sendo esperada, o que indica que essa thread não pode ser esperada. Caso contrário, cjoin adiciona a thread indicada e a thread que chamou a função para a lista de esperando????. Além disso, a thread que chamou vai para o estado bloqueado, esperando o término da thread em questão.
 

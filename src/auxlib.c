@@ -1,18 +1,7 @@
-#include "../include/support.h"
-#include "../include/cdata.h"
-#include "lista.c"
+#include "../include/auxlib.h"
 
-#include <ucontext.h>
-
-LISTA *threads, *esperando, *semaforos;
-
-PFILA2 aptos[4];
-
-/*
-
-*/
-void dispatcher() {
-    int tidProx, tidRet;
+void dispatcher(int tidTerm) {
+    int tidProx;
     TCB_t *proxThread, *retThread;
 
     if (!emptyAptos()) {
@@ -21,8 +10,8 @@ void dispatcher() {
 
         proxThread->state = 2;
 
-        if ((tidRet = findNodeExec(tidProx)) != -1) {
-            retThread = findTCB(tidRet);
+        if (tidTerm >= 0) {
+            retThread = findTCB(tidTerm);
             retThread->state = 4;
         }
 
@@ -35,14 +24,22 @@ void dispatcher() {
 }
 // 0: Criacao; 1: Apto; 2: Execucao; 3: Bloqueado e 4: Termino
 
+int getNextTid() {
+    return lastTid++;
+}
 
-int findNodeExec(int tidIgnore) {
+void setTidExec(int tid) {
+    tidExec = tid;
+}
+
+/* acho q n vamos mais usar essa merda!!!!
+TCB_t * findNodeExec() {
     LISTA *auxPt;
     TCB_t *auxTCB;
 
     auxPt = getFirstNodeLista(threads);
     auxTCB = (TCB_t *)auxPt->dado;
-    while (auxTCB->state != 2 && auxPt != NULL && auxTCB->tid != tidIgnore) {
+    while (auxTCB->state != 2 && auxPt != NULL) {
         auxPt = getNextNodeLista(threads);
         auxTCB = (TCB_t *)auxPt->dado;
     }
@@ -50,9 +47,10 @@ int findNodeExec(int tidIgnore) {
     if (auxPt == NULL) {
         return -1;
     } else {
-        return auxTCB->tid;
+        return auxTCB;
     }
 }
+*/
 
 // inicializa listas e filas
 void initializeLib() {

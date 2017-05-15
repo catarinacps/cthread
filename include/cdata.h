@@ -20,7 +20,7 @@ typedef struct s_TCB {
 	int		tid; 			// identificador da thread
 	int		state;			// estado em que a thread se encontra
 							// 0: Criacao; 1: Apto; 2: Execucao; 3: Bloqueado e 4: Termino
-	int 		prio;		// prioridade associada ao processo
+	int 		ticket;		// prioridade associada ao processo
 	ucontext_t 	context;	// contexto de execucao da thread (SP, PC, GPRs e recursos)
 } TCB_t;
 
