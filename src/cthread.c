@@ -142,6 +142,7 @@ int cjoin(int tid) {
     }
     return 0;
 }
+
 int csem_init(csem_t *sem, int count) {
     *sem->count = count;
     // add lista de semaforos da auxlib?
@@ -151,6 +152,7 @@ int csem_init(csem_t *sem, int count) {
         return 0;
     }
 }
+
 int cwait(csem_t *sem) {
     TCB_t tcbAux;
     int *tidBloqueado;
@@ -159,8 +161,9 @@ int cwait(csem_t *sem) {
         return -1;
     }
 
-    *sem->count--;
-    if (*sem->count > -1) { // gambiarra
+    if (*sem->count > 0) {
+        *sem->count--;
+
         return 0;
     } else {
         tcbAux = findTCB(tidExec);
@@ -181,6 +184,7 @@ int cwait(csem_t *sem) {
         return 0;
     }
 }
+
 int csignal(csem_t *sem) {
     int tidBloqueado, *tidApto;
     TCB_t *tcbApto;
@@ -207,6 +211,7 @@ int csignal(csem_t *sem) {
         }
     }
 }
+
 int cidentify(char *name, int size) {
     char nomes[120];
     strcpy(nomes, "Gabriel Stefaniak Niemiec 262503\n"
