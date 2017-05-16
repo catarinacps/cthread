@@ -122,7 +122,7 @@ int nextApto() {
         prio = 3;
 	}
 	tid=*((int*)GetAtIteratorFila2(aptos[prio]));
-	DeleteAtIteraatorFila2(aptos[prio]);
+	DeleteAtIteratorFila2(aptos[prio]);
 
 	return tid;
 }

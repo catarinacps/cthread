@@ -1,5 +1,6 @@
 #include "../include/cthread.h"
 #include "../include/auxlib.h"
+#include <string.h>
 
 
 int ccreate (void* (*start)(void*), void *arg, int prio) {
@@ -142,61 +143,74 @@ int cjoin (int tid) {
 	return 	0;
 }
 int csem_init (csem_t *sem, int count){
-    /*
-    csem_init inicializa uma variável de semáforo e seu respectivo contador.
-
-    ???????????????????????????????????????????????????????????????????????????
-    like, wtf
-    */
-	
+    *sem->count=count;
+	//add lista de semaforos da auxlib?
+	if(CreateFila2(*sem->fila)!=0)
+		return -1;
+	else return 0;
 }
 int cwait (csem_t *sem){
-    /*
-    cwait recebe um semáforo e checa se o contador deste semáforo é menor ou igual a zero. Se for, o processo é posto em bloqueado, esperando para acessar o recurso controlado pela variavel de semáforo. Caso contrário, o semáforo terá sua variável count decrementada e a thread poderá acessar o recurso controlado.
-
-    -->lógica:
-    república if (sem.count > 0){
-        sem.count--;
-        return 0;
-    } else{
-        TCBexec.state = bloqueado;
-        semBloqueia(sem, TCBexec.tid);
-
-        return -50000;
-    }
-    */
+	TCB_t tcbAux;
+	int *tidBloqueado;
 	
+	if(sem == NULL)
+		return -1;
+	*sem->count--;
+	if(*sem->count>-1){	//gambiarra
+		return 0;
+	}else{
+		tcbAux=findTCB(tidExec); 
+		tcbAux->state=3;
+		
+		tidBloqueado=malloc(sizeof(int));
+		*tidBloqueado=tidExec;
+		
+		if(AppendFila2(*sem->fila,(void*)tidBloqueado)!=0)
+			return -1;
+		
+		getcontext(&(tcbAux->context));
+		
+		if (tcbAux->state == 3) {
+            dispatcher(-1);
+        }
+		return 	0;
+	}	
 }
 int csignal (csem_t *sem){
-    /*
-    csignal recebe um semáforo e incrementa sua variável de count, indicando que a thread terminou de usar o recurso controlado pelo semáforo. Nesse momento, se houver threads na lista de bloqueados do semáforo, é utilizado a ideia de FIFO, e a primeira thread na fila é posta em apto.
-
-    -->lógica:
-    if (sem.count <= 0){
-        sem.count++;
-
-        tidDesbl = semDesbloqueia(sem); //é o primeiro da fila
-        TCBaux = tiraFila(tid, bloqSem); //bloqSem é a fila de bloqueados por semáforo
-        appenddFila(aptos?, TCBaux);
-
-        return 0;
-    } else{
-        return -900;
-    }
-    */
+	int tidBloqueado, *tidApto;
+	TCB_t *tcbApto;
 	
+	if(sem==NULL)
+		return -1;
+	*sem->count++;
+	if(FirstFila2(*sem->fila)!=0){
+		return 0;
+	}else{
+		tidBloqueado= *((int*)GetAtIteratorFila2(*sem->fila));
+		DeleteAtIteratorFila2(*sem->fila);
+		
+		tcbApto = findTCB(tidBloqueado);
+		tidApto=malloc(sizeof(int));
+		*tidApto=tidBloqueado;
+		
+        if (AppendFila2(aptos[tcbApto->ticket], (void *)tidApto) == 0) {
+            tcbApto->state = 1;
+			return 0;
+        } else {
+            return -1;
+        }
+		
+	}
 }
 int cidentify (char *name, int size){
-    /*
-    Escreve nossos nomes em *name se size >= sizeOf(nomes)
-
-    if (sizeOf(nossosNomes) <= size){
-        strcpy(name, ponteiroApontandoParaNossosNomes);
-
-        return 0;
-    } else{
-        return -70000;
-    }
-    */
-	
+	char nomes[120];
+	strcpy(nomes,   "Gabriel Stefaniak Niemiec 262503\n"
+					"Henrique Correa Pereira da Silva 262508\n"
+					"Nicolas Eymael da Silva 262506\n");
+	if(strlen(nomes)<=size){
+		strcpy(name,nomes);
+		return 0;
+	}else{
+		return -1;
+	}
 }
