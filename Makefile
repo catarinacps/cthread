@@ -1,33 +1,26 @@
-#
-# Makefile de EXEMPLO
-#
-# OBRIGATÓRIO ter uma regra "all" para geração da biblioteca e de uma
-# regra "clean" para remover todos os objetos gerados.
-#
-# É NECESSARIO ADAPTAR ESSE ARQUIVO de makefile para suas necessidades.
-#  1. Cuidado com a regra "clean" para não apagar o "support.o"
-#
-# OBSERVAR que as variáveis de ambiente consideram que o Makefile está no diretótio "cthread"
-# 
+CC = gcc
+CFLAGS = -I$(IDIR) -Wall
 
-CC=gcc
-LIB_DIR=./lib
-INC_DIR=./include
-BIN_DIR=./bin
-SRC_DIR=./src
+IDIR = include
+ODIR = obj
+#LDIR = ../lib
 
-all: regra1 regra2 regran
+#LIBS = -lm
 
-regra1: #dependências para a regra1
-	$(CC) -o $(BIN_DIR)regra1 $(SRC_DIR)regra1.c -Wall
+_DEPS = auxlib.h lista.h cthread.h cdata.h support.h
+DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-regra2: #dependências para a regra2
-	$(CC) -o $(BIN_DIR)regra2 $(SRC_DIR)regra2.c -Wall
+_OBJ = cthread.o lista.o auxlib.o 
+OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-regran: #dependências para a regran
-	$(CC) -o $(BIN_DIR)regran $(SRC_DIR)regran.c -Wall
+
+$(ODIR)/%.o: src/%.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+libs: $(OBJ)
+	gcc -o $@ $^ $(CFLAGS)
+
+.PHONY: clean
 
 clean:
-	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
-
-
+	rm -f $(ODIR)/*.o *~ core $(IDIR)/*~ 
