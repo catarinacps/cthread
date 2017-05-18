@@ -52,7 +52,7 @@ int csetprio(int tid, int prio) {
     if (prio < 0 || prio > 4) {
         return -1;
     }
-    if (tcbAux = findTCB(tid)) {
+    if ((tcbAux = findTCB(tid))) {
         if (tcbAux->state == 1) {
             changePrioFIFO(tcbAux->ticket, prio, tid);
         }
@@ -68,7 +68,7 @@ int cyield(void) {
     int *ptTidExec;
     TCB_t *tcbExec;
 
-    if (emptyTCBList()) {
+    if ((emptyTCBList())) {
         return -1;
     } else {
         ptTidExec = malloc(sizeof(int));
@@ -103,7 +103,7 @@ int cjoin(int tid) {
         return -1;
     }
 
-    if (emptylista(esperando)) {
+    if (emptyLista(esperando)) {
         // so botar
         tcbAux = findTCB(tidExec);
         tcbAux->state = 3;
@@ -146,9 +146,9 @@ int cjoin(int tid) {
 int csem_init(csem_t *sem, int count) {
     
     if (count >= 0) {
-        *sem->count = count;
+        sem->count = count;
         // add lista de semaforos da auxlib?
-        if (CreateFila2(*sem->fila) != 0) {
+        if (CreateFila2(sem->fila) != 0) {
             return -1;
         } else {
             return 0;
@@ -159,34 +159,34 @@ int csem_init(csem_t *sem, int count) {
 }
 
 int cwait(csem_t *sem) {
-    TCB_t tcbAux;
+    TCB_t *tcbAux;
     int *tidBloqueado;
 
     if (sem == NULL) {
         return -1;
-    }
-
-    if (*sem->count > 0) {
-        *sem->count--;
-
-        return 0;
     } else {
-        tcbAux = findTCB(tidExec);
-        tcbAux->state = 3;
+        if (sem->count > 0) {
+            sem->count--;
 
-        tidBloqueado = malloc(sizeof(int));
-        *tidBloqueado = tidExec;
+            return 0;
+        } else {
+            tcbAux = findTCB(tidExec);
+            tcbAux->state = 3;
 
-        if (AppendFila2(*sem->fila, (void *)tidBloqueado) != 0) {
-            return -1;
+            tidBloqueado = malloc(sizeof(int));
+            *tidBloqueado = tidExec;
+
+            if (AppendFila2(sem->fila, (void *)tidBloqueado) != 0) {
+                return -1;
+            }
+
+            getcontext(&(tcbAux->context));
+
+            if (tcbAux->state == 3) {
+                dispatcher(-1);
+            }
+            return 0;
         }
-
-        getcontext(&(tcbAux->context));
-
-        if (tcbAux->state == 3) {
-            dispatcher(-1);
-        }
-        return 0;
     }
 }
 
@@ -196,23 +196,24 @@ int csignal(csem_t *sem) {
 
     if (sem == NULL) {
         return -1;
-    }
-    *sem->count++;
-    if (FirstFila2(*sem->fila) != 0) {
-        return 0;
     } else {
-        tidBloqueado = *((int *)GetAtIteratorFila2(*sem->fila));
-        DeleteAtIteratorFila2(*sem->fila);
-
-        tcbApto = findTCB(tidBloqueado);
-        tidApto = malloc(sizeof(int));
-        *tidApto = tidBloqueado;
-
-        if (AppendFila2(aptos[tcbApto->ticket], (void *)tidApto) == 0) {
-            tcbApto->state = 1;
+        sem->count++;
+        if (FirstFila2(sem->fila) != 0) {
             return 0;
         } else {
-            return -1;
+            tidBloqueado = *((int *)GetAtIteratorFila2(sem->fila));
+            DeleteAtIteratorFila2(sem->fila);
+
+            tcbApto = findTCB(tidBloqueado);
+            tidApto = malloc(sizeof(int));
+            *tidApto = tidBloqueado;
+
+            if (AppendFila2(aptos[tcbApto->ticket], (void *)tidApto) == 0) {
+                tcbApto->state = 1;
+                return 0;
+            } else {
+                return -1;
+            }
         }
     }
 }
