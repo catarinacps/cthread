@@ -68,7 +68,7 @@ int cyield(void) {
     int *ptTidExec;
     TCB_t *tcbExec;
 
-    if (emptyTCB()) {
+    if (emptyTCBList()) {
         return -1;
     } else {
         ptTidExec = malloc(sizeof(int));

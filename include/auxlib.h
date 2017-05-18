@@ -1,8 +1,8 @@
-#include "cdata.h"
-#include "lista.h"
-
 #include <stdio.h>
 #include <ucontext.h>
+
+#include "cdata.h"
+#include "lista.h"
 
 #define TID_MAIN 0
 
@@ -38,3 +38,4 @@ void changePrioFIFO(int prio_velha, int prio_nova, int tid);
 int emptyAptos();
 
 int nextApto();
+
