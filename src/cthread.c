@@ -1,4 +1,3 @@
-#include "../include/cthread.h"
 #include "../include/auxlib.h"
 #include <string.h>
 
@@ -96,7 +95,7 @@ int cjoin(int tid) {
 
     nodo = esperando;
 
-    if (tcbAux = findTCB(tid)) {
+    if ((tcbAux = findTCB(tid))) {
         return -1;
     }
     if (tcbAux->state == 4) {

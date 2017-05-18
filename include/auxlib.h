@@ -3,6 +3,7 @@
 
 #include "cdata.h"
 #include "lista.h"
+#include "cthread.h"
 
 #define TID_MAIN 0
 
@@ -15,9 +16,8 @@ struct esperanca{
 };
 typedef struct esperanca ESPERA;
 
-int lastTid = TID_MAIN;
-int tidExec = TID_MAIN; //pelo menos no inicio
-
+int lastTid;
+int tidExec;
 
 void dispatcher(int tidTerm);
 

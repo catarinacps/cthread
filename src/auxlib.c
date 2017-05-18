@@ -1,5 +1,8 @@
 #include "../include/auxlib.h"
 
+int lastTid = TID_MAIN;
+int tidExec = TID_MAIN; //pelo menos no inicio
+
 void dispatcher(int tidTerm) {
     TCB_t *proxThread, *retThread;
 
@@ -111,12 +114,12 @@ int emptyAptos() {
 int nextApto() {
     int tid, prio;
     // pelo projeto do dispatcher, garante-se q ha aptos
-    if (FirstFila2(aptos[0]==0) {
+    if (FirstFila2(aptos[0])==0) {
         prio = 0;
 	} else if (FirstFila2(aptos[1])==0) {
         prio = 1;
 	} else if (FirstFila2(aptos[2])==0) {
-        prio = 2
+        prio = 2;
 	} else {
         FirstFila2(aptos[3]);
         prio = 3;

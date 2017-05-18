@@ -3,24 +3,26 @@ CFLAGS = -I$(IDIR) -Wall
 
 IDIR = include
 ODIR = obj
-#LDIR = ../lib
+LDIR = lib
+SDIR = src
+
+TARGET = lib/libcthread.a
 
 #LIBS = -lm
 
 _DEPS = auxlib.h lista.h cthread.h cdata.h support.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = cthread.o lista.o auxlib.o 
+_OBJ = cthread.o lista.o auxlib.o support.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
+all: $(TARGET)
 
-$(ODIR)/%.o: src/%.c $(DEPS)
+$(TARGET): $(OBJ)
+	ar rcs $@ $^
+
+$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-libs: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS)
-
-.PHONY: clean
-
 clean:
-	rm -f $(ODIR)/*.o *~ core $(IDIR)/*~ 
+	rm -f $(ODIR)/*.o $(IDIR)/*~ $(LDIR)/*.a *~
