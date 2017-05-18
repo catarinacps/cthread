@@ -115,7 +115,6 @@ int cjoin(int tid) {
         getcontext(&(tcbAux->context));
 
     } else {
-
         do {
             aux = (ESPERA *)nodo->dados;
             nodo = getNextNodeLista(esperando);

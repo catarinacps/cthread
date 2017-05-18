@@ -4,18 +4,42 @@ int lastTid = TID_MAIN;
 int tidExec = TID_MAIN; //pelo menos no inicio
 
 void dispatcher(int tidTerm) {
-    TCB_t *proxThread, *retThread;
+    TCB_t *proxThread, *retThread, *bloqThread;
+    int *ptTidBloq;
+    LISTA *nodo;
+    ESPERA *aux;
+
+    if (tidTerm >= 0) {
+        retThread = findTCB(tidTerm);
+        retThread->state = 4;
+
+        if (!emptyLista(esperando)) {
+            nodo = esperando;
+            aux = (ESPERA *)nodo->dados;
+
+            while (aux->tidEsperado != tidTerm && nodo != NULL) {
+                nodo = getNextNodeLista(esperando);
+                if (nodo != NULL) {
+                    aux = (ESPERA *)nodo->dados;
+                }
+            }
+
+            if (aux->tidEsperado == tidTerm) {
+                bloqThread = findTCB(aux->tidBloqueado);
+                ptTidBloq = malloc(sizeof(int));
+                *ptTidBloq = bloqThread->tid;
+                
+                AppendFila2(aptos[bloqThread->ticket], (void *)ptTidBloq);
+                esperando = removeLista(nodo, 0);
+            }
+        }
+    }
 
     if (!emptyAptos()) {
         tidExec = nextApto();
         proxThread = findTCB(tidExec);
 
         proxThread->state = 2;
-
-        if (tidTerm >= 0) {
-            retThread = findTCB(tidTerm);
-            retThread->state = 4;
-        }
 
         setcontext(&(proxThread->context));
     } else {
