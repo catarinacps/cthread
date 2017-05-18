@@ -144,12 +144,17 @@ int cjoin(int tid) {
 }
 
 int csem_init(csem_t *sem, int count) {
-    *sem->count = count;
-    // add lista de semaforos da auxlib?
-    if (CreateFila2(*sem->fila) != 0) {
-        return -1;
+    
+    if (count >= 0) {
+        *sem->count = count;
+        // add lista de semaforos da auxlib?
+        if (CreateFila2(*sem->fila) != 0) {
+            return -1;
+        } else {
+            return 0;
+        }
     } else {
-        return 0;
+        return -1;
     }
 }
 
