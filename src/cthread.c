@@ -30,22 +30,16 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
 
     tcbNew = malloc(sizeof(TCB_t));
 
-	tcbNew->tid = getNextTid();
+    getcontext(&(tcbNew->context));
+    tcbNew->tid = getNextTid();
     tcbNew->state = 1;
     tcbNew->ticket = prio;
-	
-    getcontext(&(tcbNew->context));
-	tcbNew->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
-    tcbNew->context.uc_stack.ss_size = SIGSTKSZ;
-	
-	// arrumar uclink para o dispatcher
-	getcontext(tcbNew->context.uc_link);
-	tcbNew->context.uc_link.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
-    tcbNew->context.uc_link.uc_stack.ss_size = SIGSTKSZ;
-	tcbNew->context.uc_link.uc_link = NULL;
-	makecontext(tcbNew->context.uc_link, (void (*)(void))dispatcher, 1, tcbNew->tid);x
-	
     makecontext(&(tcbNew->context), (void (*)(void))start, 1, arg);
+
+    getcontext(tcbMain->context.uc_link);
+    tcbNew->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
+    tcbNew->context.uc_stack.ss_size = SIGSTKSZ;
+    makecontext(tcbNew->context.uc_link, (void (*)(void))dispatcher, 1, tcbNew->tid);
 
     addTCB(tcbNew);
 
