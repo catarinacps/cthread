@@ -2,9 +2,12 @@
 #include <string.h>
 
 int started=0;
+ucontext_t *contexto;
+
 
 int ccreate(void *(*start)(void *), void *arg, int prio) {
-    TCB_t *tcbMain, *tcbNew;
+    TCB_t *tcbMain, *tcbNew;	
+	
     if (prio < 0 || prio > 4) {
         return -1;
     }else if(started==0){
@@ -21,15 +24,19 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
         if (getcontext(&(tcbMain->context)) != 0) {
             return -1;
         }
-
+		
         setTidExec(tcbMain->tid);
-
-        getcontext(tcbMain->context.uc_link);
+		
+		contexto=malloc(sizeof(ucontext_t));
+		getcontext(contexto);
+		contexto->uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
+        contexto->uc_stack.ss_size = SIGSTKSZ;
+        contexto->uc_link = NULL;
+		makecontext(contexto, (void (*)(void))dispatcher, 1,tcbMain->tid);
+		
         tcbMain->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
         tcbMain->context.uc_stack.ss_size = SIGSTKSZ;
-        tcbMain->context.uc_link = NULL;
-        makecontext(tcbMain->context.uc_link, (void (*)(void))dispatcher, 1,
-                    tcbMain->tid);
+		tcbMain->context.uc_link=contexto;
 
         addTCB(tcbMain);
     }
@@ -46,9 +53,7 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
     tcbNew->context.uc_link = NULL;
     makecontext(&(tcbNew->context), (void (*)(void))start, 1, arg);
 
-    getcontext(tcbNew->context.uc_link);
-    makecontext(tcbNew->context.uc_link, (void (*)(void))dispatcher, 1, tcbNew->tid);
-
+	tcbNew->context.uc_link=contexto;
     addTCB(tcbNew);
 
     return tcbNew->tid;
@@ -83,7 +88,7 @@ int cyield(void) {
         *ptTidExec = tidExec;
 
         tcbExec = findTCB(tidExec);
-        if (AppendFila2(*aptos[tcbExec->ticket], (void *)ptTidExec) == 0) {
+        if (AppendFila2(aptos[tcbExec->ticket], (void *)ptTidExec) == 0) {
             tcbExec->state = 1;
             getcontext(&(tcbExec->context));
         } else {
@@ -215,7 +220,7 @@ int csignal(csem_t *sem) {
             tidApto = malloc(sizeof(int));
             *tidApto = tidBloqueado;
 
-            if (AppendFila2(*aptos[tcbApto->ticket], (void *)tidApto) == 0) {
+            if (AppendFila2(aptos[tcbApto->ticket], (void *)tidApto) == 0) {
                 tcbApto->state = 1;
                 return 0;
             } else {
