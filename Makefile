@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I$(IDIR) -Wall
+CFLAGS = -I$(IDIR) -Wall --debug
 
 IDIR = include
 ODIR = obj
