@@ -19,7 +19,8 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
 
         setTidExec(tcbMain->tid);
 
-        tcbMain->context.uc_stack.ss_sp = malloc(SIGSTKSZ);
+        getcontext(&(tcbMain->context.uc_link));
+        tcbMain->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
         tcbMain->context.uc_stack.ss_size = SIGSTKSZ;
         makecontext(tcbMain->context.uc_link, (void (*)(void))dispatcher, 1,
                     tcbMain->tid);
@@ -29,12 +30,14 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
 
     tcbNew = malloc(sizeof(TCB_t));
 
+    getcontext(&(tcbNew->context));
     tcbNew->tid = getNextTid();
     tcbNew->state = 1;
     tcbNew->ticket = prio;
     makecontext(&(tcbNew->context), (void (*)(void))start, 1, arg);
 
-    tcbNew->context.uc_stack.ss_sp = malloc(SIGSTKSZ);
+    getcontext(&(tcbMain->context.uc_link));
+    tcbNew->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
     tcbNew->context.uc_stack.ss_size = SIGSTKSZ;
     makecontext(tcbNew->context.uc_link, (void (*)(void))dispatcher, 1, tcbNew->tid);
 
