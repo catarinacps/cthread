@@ -1,12 +1,17 @@
 #include "../include/auxlib.h"
 #include <string.h>
 
+int started=0;
+
 int ccreate(void *(*start)(void *), void *arg, int prio) {
     TCB_t *tcbMain, *tcbNew;
-
     if (prio < 0 || prio > 4) {
         return -1;
-    }
+    }else if(started==0){
+		initializeLib();
+		started=1;
+	}
+	
     if (emptyTCBList()) {
         tcbMain = malloc(sizeof(TCB_t));
 
