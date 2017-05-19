@@ -6,38 +6,40 @@ int tidExec = TID_MAIN; //pelo menos no inicio
 
 
 
-void dispatcher(int tidTerm) {
+void dispatcher(int terminado) {
     TCB_t *proxThread, *retThread, *bloqThread;
     int *ptTidBloq;
     LISTA *nodo;
     ESPERA *aux;
+	
+	printf(" entrei no dispatcher ");
 
-    if (tidTerm >= 0) {
-        retThread = findTCB(tidTerm);
+    if (terminado == 0) {
+        retThread = findTCB(tidExec);
         retThread->state = 4;
 
-        if (!emptyLista(esperando)) {
+        if (!emptyLista(esperando)) { printf(" tem alguem esperando ");
             nodo = esperando;
             aux = (ESPERA *)nodo->dados;
 
-            while (aux->tidEsperado != tidTerm && nodo != NULL) {
+            while (aux->tidEsperado != tidExec && nodo != NULL) {
                 nodo = getNextNodeLista(esperando);
                 if (nodo != NULL) {
                     aux = (ESPERA *)nodo->dados;
                 }
             }
 
-            if (aux->tidEsperado == tidTerm) {
+            if (aux->tidEsperado == tidExec) { printf(" achou o esperado ");
                 bloqThread = findTCB(aux->tidBloqueado);
                 ptTidBloq = malloc(sizeof(int));
                 *ptTidBloq = bloqThread->tid;
-                
+                bloqThread->state=1;
                 AppendFila2(aptos[bloqThread->ticket], (void *)ptTidBloq);
                 esperando = removeLista(nodo, 0);
             }
         }
     }
-
+	
     if (!emptyAptos()) {
         tidExec = nextApto();
         proxThread = findTCB(tidExec);
@@ -55,10 +57,6 @@ void dispatcher(int tidTerm) {
 
 int getNextTid() {
     return lastTid++;
-}
-
-void setTidExec(int tid) {
-    tidExec = tid;
 }
 
 /* acho q n vamos mais usar essa merda!!!!

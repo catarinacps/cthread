@@ -2,20 +2,20 @@
 #include <string.h>
 
 int started=0;
-ucontext_t *contexto;
+//ucontext_t *contexto;
 
 
 int ccreate(void *(*start)(void *), void *arg, int prio) {
-    TCB_t *tcbMain, *tcbNew;	
+    TCB_t *tcbMain, *tcbNew;
+	int *ptTidNew;
+	ucontext_t *contexto;
 	
-    if (prio < 0 || prio > 4) {
+    if (prio < 0 || prio > 4) { //se a prioridade n eh valida da erro
         return -1;
-    }else if(started==0){
+    }else if(started==0){	//inicializa a lib n primeira vez
 		initializeLib();
 		started=1;
-	}
-	
-    if (emptyTCBList()) {
+		//cria tcb da main
         tcbMain = malloc(sizeof(TCB_t));
 
         tcbMain->tid = getNextTid();
@@ -25,14 +25,14 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
             return -1;
         }
 		
-        setTidExec(tcbMain->tid);
+        tidExec=tcbMain->tid;
 		
 		contexto=malloc(sizeof(ucontext_t));
 		getcontext(contexto);
 		contexto->uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
         contexto->uc_stack.ss_size = SIGSTKSZ;
         contexto->uc_link = NULL;
-		makecontext(contexto, (void (*)(void))dispatcher, 1,tcbMain->tid);
+		makecontext(contexto, (void (*)(void))dispatcher, 1,0);
 		
         tcbMain->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
         tcbMain->context.uc_stack.ss_size = SIGSTKSZ;
@@ -47,14 +47,26 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
     tcbNew->tid = getNextTid();
     tcbNew->state = 1;
     tcbNew->ticket = prio;
+	
+	//fazer coisas deselegantes
+	contexto=malloc(sizeof(ucontext_t));
+	getcontext(contexto);
+	contexto->uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
+    contexto->uc_stack.ss_size = SIGSTKSZ;
+    contexto->uc_link = NULL;
+	makecontext(contexto, (void (*)(void))dispatcher, 1,0);
 
     tcbNew->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
     tcbNew->context.uc_stack.ss_size = SIGSTKSZ;
-    tcbNew->context.uc_link = NULL;
-    makecontext(&(tcbNew->context), (void (*)(void))start, 1, arg);
-
 	tcbNew->context.uc_link=contexto;
+    makecontext(&(tcbNew->context), (void (*)(void))start, 1, arg);
+	
+	//tcbNew->context.uc_link=contexto;
     addTCB(tcbNew);
+	
+	ptTidNew=malloc(sizeof(int));
+	*ptTidNew=tcbNew->tid;
+	AppendFila2(aptos[prio], (void *)ptTidNew);
 
     return tcbNew->tid;
 }
@@ -108,16 +120,16 @@ int cjoin(int tid) {
     ESPERA *aux;
 
     nodo = esperando;
-
-    if ((tcbAux = findTCB(tid))) {
+	
+    if (!(tcbAux = findTCB(tid))) {printf("if besta1");
         return -1;
     }
-    if (tcbAux->state == 4) {
+    if (tcbAux->state == 4) {printf("if besta2");
         return -1;
     }
-
+	printf("ifs bestas");
     if (emptyLista(esperando)) {
-        // so botar
+		printf("if1");
         tcbAux = findTCB(tidExec);
         tcbAux->state = 3;
 
@@ -128,14 +140,13 @@ int cjoin(int tid) {
 
         getcontext(&(tcbAux->context));
 
-    } else {
+    } else { printf("elsif1");
         do {
             aux = (ESPERA *)nodo->dados;
             nodo = getNextNodeLista(esperando);
         } while (aux->tidEsperado != tid && nodo != NULL);
 
-        if (nodo == NULL) {
-            // so botar
+        if (nodo == NULL && aux->tidEsperado != tid) {printf("if2");
             tcbAux = findTCB(tidExec);
             tcbAux->state = 3;
 
@@ -145,13 +156,13 @@ int cjoin(int tid) {
             esperando = insertLista(esperando, (void *)aux);
 
             getcontext(&(tcbAux->context));
-        } else {
-            return -1;
-        }
+        } else {printf("elsif2");
+            return -1;	//thread a ser esperada ja esta
+        }				//sendo esperada por outra
     }
-    if (tcbAux->state == 3) {
+    if (tcbAux->state == 3) {printf("if3");
         dispatcher(-1);
-    }
+    }printf("else if 3");
     return 0;
 }
 
