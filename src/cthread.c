@@ -78,7 +78,7 @@ int cyield(void) {
         *ptTidExec = tidExec;
 
         tcbExec = findTCB(tidExec);
-        if (AppendFila2(aptos[tcbExec->ticket], (void *)ptTidExec) == 0) {
+        if (AppendFila2(*aptos[tcbExec->ticket], (void *)ptTidExec) == 0) {
             tcbExec->state = 1;
             getcontext(&(tcbExec->context));
         } else {
@@ -210,7 +210,7 @@ int csignal(csem_t *sem) {
             tidApto = malloc(sizeof(int));
             *tidApto = tidBloqueado;
 
-            if (AppendFila2(aptos[tcbApto->ticket], (void *)tidApto) == 0) {
+            if (AppendFila2(*aptos[tcbApto->ticket], (void *)tidApto) == 0) {
                 tcbApto->state = 1;
                 return 0;
             } else {

@@ -29,7 +29,7 @@ void dispatcher(int tidTerm) {
                 ptTidBloq = malloc(sizeof(int));
                 *ptTidBloq = bloqThread->tid;
                 
-                AppendFila2(aptos[bloqThread->ticket], (void *)ptTidBloq);
+                AppendFila2(*aptos[bloqThread->ticket], (void *)ptTidBloq);
                 esperando = removeLista(nodo, 0);
             }
         }
@@ -80,13 +80,16 @@ TCB_t * findNodeExec() {
 
 // inicializa listas e filas
 void initializeLib() {
+	int i;
     threads = initLista();
     esperando = threads;
     semaforos = threads;
-    CreateFila2(aptos[0]);
-    CreateFila2(aptos[1]);
-    CreateFila2(aptos[2]);
-    CreateFila2(aptos[3]);
+	for(i=0;i<4;i++)
+		aptos[i]=malloc(sizeof(PFILA2));
+    CreateFila2(*aptos[0]);
+    CreateFila2(*aptos[1]);
+    CreateFila2(*aptos[2]);
+    CreateFila2(*aptos[3]);
 }
 
 // diz se a lista de threads está vazia
@@ -108,26 +111,26 @@ TCB_t *findTCB(int tid) {
 void changePrioFIFO(int prio_velha, int prio_nova, int tid) {
     int *dado_tid, achou = 0;
 
-    FirstFila2(aptos[prio_velha]); // coloca iterador no inicio da fila
+    FirstFila2(*aptos[prio_velha]); // coloca iterador no inicio da fila
 
     do {
-        dado_tid = (int*)GetAtIteratorFila2(aptos[prio_velha]);
+        dado_tid = (int*)GetAtIteratorFila2(*aptos[prio_velha]);
         if (*dado_tid == tid) {
             achou = 1;
         } else {
-            NextFila2(aptos[prio_velha]);
+            NextFila2(*aptos[prio_velha]);
         }
     } while (achou == 0); // coloca iterador na posicao com tid
 
-    DeleteAtIteratorFila2(aptos[prio_velha]); // remove da fila
+    DeleteAtIteratorFila2(*aptos[prio_velha]); // remove da fila
 
-    AppendFila2(aptos[prio_nova], (void*)dado_tid); // adiciona na outra fila
+    AppendFila2(*aptos[prio_nova], (void*)dado_tid); // adiciona na outra fila
 }
 
 // retorna 1 se nao ha aptos, senao retorna 0
 int emptyAptos() {
-    if ((FirstFila2(aptos[0]) != 0) && (FirstFila2(aptos[1]) != 0) &&
-        (FirstFila2(aptos[2]) != 0) && (FirstFila2(aptos[3]) != 0)) {
+    if ((FirstFila2(*aptos[0]) != 0) && (FirstFila2(*aptos[1]) != 0) &&
+        (FirstFila2(*aptos[2]) != 0) && (FirstFila2(*aptos[3]) != 0)) {
         return 1;
     } else {
         return 0;
@@ -138,18 +141,18 @@ int emptyAptos() {
 int nextApto() {
     int tid, prio;
     // pelo projeto do dispatcher, garante-se q ha aptos
-    if (FirstFila2(aptos[0])==0) {
+    if (FirstFila2(*aptos[0])==0) {
         prio = 0;
-	} else if (FirstFila2(aptos[1])==0) {
+	} else if (FirstFila2(*aptos[1])==0) {
         prio = 1;
-	} else if (FirstFila2(aptos[2])==0) {
+	} else if (FirstFila2(*aptos[2])==0) {
         prio = 2;
 	} else {
-        FirstFila2(aptos[3]);
+        FirstFila2(*aptos[3]);
         prio = 3;
 	}
-	tid=*((int*)GetAtIteratorFila2(aptos[prio]));
-	DeleteAtIteratorFila2(aptos[prio]);
+	tid=*((int*)GetAtIteratorFila2(*aptos[prio]));
+	DeleteAtIteratorFila2(*aptos[prio]);
 
 	return tid;
 }

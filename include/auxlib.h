@@ -8,7 +8,7 @@
 #define TID_MAIN 0
 
 LISTA *threads, *esperando, *semaforos;
-PFILA2 aptos[4];
+PFILA2 *aptos[4];
 
 struct esperanca{
 	int tidEsperado;
