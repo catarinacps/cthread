@@ -3,7 +3,6 @@
 
 int ccreate(void *(*start)(void *), void *arg, int prio) {
     TCB_t *tcbMain, *tcbNew;
-    char mainStack[SIGSTKSZ], newStack[SIGSTKSZ];
 
     if (prio < 0 || prio > 4) {
         return -1;
@@ -20,10 +19,10 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
 
         setTidExec(tcbMain->tid);
 
+        tcbMain->context.uc_stack.ss_sp = malloc(SIGSTKSZ);
+        tcbMain->context.uc_stack.ss_size = SIGSTKSZ;
         makecontext(tcbMain->context.uc_link, (void (*)(void))dispatcher, 1,
                     tcbMain->tid);
-        tcbMain->context.uc_stack.ss_sp = mainStack;
-        tcbMain->context.uc_stack.ss_size = sizeof(mainStack);
 
         addTCB(tcbMain);
     }
@@ -35,10 +34,9 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
     tcbNew->ticket = prio;
     makecontext(&(tcbNew->context), (void (*)(void))start, 1, arg);
 
-    makecontext(tcbNew->context.uc_link, (void (*)(void))dispatcher, 1,
-                tcbNew->tid);
-    tcbNew->context.uc_stack.ss_sp = newStack;
-    tcbNew->context.uc_stack.ss_size = sizeof(newStack);
+    tcbNew->context.uc_stack.ss_sp = malloc(SIGSTKSZ);
+    tcbNew->context.uc_stack.ss_size = SIGSTKSZ;
+    makecontext(tcbNew->context.uc_link, (void (*)(void))dispatcher, 1, tcbNew->tid);
 
     addTCB(tcbNew);
 
