@@ -226,8 +226,8 @@ int csignal(csem_t *sem) {
     if (sem == NULL) {
         return ERRO;
     } else {
-        sem->count++;		// desaloca o recurso
         if (FirstFila2(sem->fila) != 0) {	// nao há nenhuma thread bloqueada nesse semaforo, então ja ta pronto
+			sem->count++;		// desaloca o recurso
             return OK;
         } else {
             tidBloqueado = *((int *)GetAtIteratorFila2(sem->fila));			//////////////////////////////
