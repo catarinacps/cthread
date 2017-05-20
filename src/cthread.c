@@ -164,6 +164,10 @@ int cjoin(int tid) {
 }
 
 int csem_init(csem_t *sem, int count) {
+    if (started == 0) { // inicializa a lib n primeira vez
+        initializeLib();
+        started = 1;
+    }
 
     if (count >= 0) {
         sem->count = count;
@@ -241,6 +245,12 @@ int csignal(csem_t *sem) {
 
 int cidentify(char *name, int size) {
     char nomes[120];
+
+    if (started == 0) { // inicializa a lib n primeira vez
+        initializeLib();
+        started = 1;
+    }
+
     strcpy(nomes, "Gabriel Stefaniak Niemiec 262503\n"
                   "Henrique Correa Pereira da Silva 262508\n"
                   "Nicolas Eymael da Silva 262506\n");
