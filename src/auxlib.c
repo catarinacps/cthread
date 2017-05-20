@@ -2,9 +2,7 @@
 #include "../include/support.h"
 
 int lastTid = TID_MAIN;
-int tidExec = TID_MAIN; //pelo menos no inicio
-
-
+int tidExec = TID_MAIN; // pelo menos no inicio
 
 void dispatcher(int terminado) {
     TCB_t *proxThread, *retThread, *bloqThread;
@@ -31,13 +29,13 @@ void dispatcher(int terminado) {
                 bloqThread = findTCB(aux->tidBloqueado);
                 ptTidBloq = malloc(sizeof(int));
                 *ptTidBloq = bloqThread->tid;
-                bloqThread->state=1;
+                bloqThread->state = 1;
                 AppendFila2(aptos[bloqThread->ticket], (void *)ptTidBloq);
                 esperando = removeLista(nodo, 0);
             }
         }
     }
-	
+
     if (!emptyAptos()) {
         tidExec = nextApto();
         proxThread = findTCB(tidExec);
@@ -59,12 +57,12 @@ int getNextTid() {
 
 // inicializa listas e filas
 void initializeLib() {
-	int i;
+    int i;
     threads = initLista();
     esperando = threads;
     semaforos = threads;
-	for(i=0;i<4;i++)
-		aptos[i]=malloc(sizeof(PFILA2));
+    for (i = 0; i < 4; i++)
+        aptos[i] = malloc(sizeof(PFILA2));
     CreateFila2(aptos[0]);
     CreateFila2(aptos[1]);
     CreateFila2(aptos[2]);
@@ -78,12 +76,12 @@ int emptyTCBList() {
 
 // adiciona um TCB a lista de threads
 void addTCB(TCB_t *tcb) {
-    threads=insertLista(threads, (void*)tcb);
+    threads = insertLista(threads, (void *)tcb);
 }
 
 // retorna o endereço do TCB com a tid se encontrado, senao retorna NULL
 TCB_t *findTCB(int tid) {
-    return (TCB_t*)getNodeLista(threads, tid);
+    return (TCB_t *)getNodeLista(threads, tid);
 }
 
 // troca de fila de prioridades
@@ -93,7 +91,7 @@ void changePrioFIFO(int prio_velha, int prio_nova, int tid) {
     FirstFila2(aptos[prio_velha]); // coloca iterador no inicio da fila
 
     do {
-        dado_tid = (int*)GetAtIteratorFila2(aptos[prio_velha]);
+        dado_tid = (int *)GetAtIteratorFila2(aptos[prio_velha]);
         if (*dado_tid == tid) {
             achou = 1;
         } else {
@@ -103,7 +101,7 @@ void changePrioFIFO(int prio_velha, int prio_nova, int tid) {
 
     DeleteAtIteratorFila2(aptos[prio_velha]); // remove da fila
 
-    AppendFila2(aptos[prio_nova], (void*)dado_tid); // adiciona na outra fila
+    AppendFila2(aptos[prio_nova], (void *)dado_tid); // adiciona na outra fila
 }
 
 // retorna 1 se nao ha aptos, senao retorna 0
@@ -120,18 +118,18 @@ int emptyAptos() {
 int nextApto() {
     int tid, prio;
     // pelo projeto do dispatcher, garante-se q ha aptos
-    if (FirstFila2(aptos[0])==0) {
+    if (FirstFila2(aptos[0]) == 0) {
         prio = 0;
-	} else if (FirstFila2(aptos[1])==0) {
+    } else if (FirstFila2(aptos[1]) == 0) {
         prio = 1;
-	} else if (FirstFila2(aptos[2])==0) {
+    } else if (FirstFila2(aptos[2]) == 0) {
         prio = 2;
-	} else {
+    } else {
         FirstFila2(aptos[3]);
         prio = 3;
-	}
-	tid=*((int*)GetAtIteratorFila2(aptos[prio]));
-	DeleteAtIteratorFila2(aptos[prio]);
+    }
+    tid = *((int *)GetAtIteratorFila2(aptos[prio]));
+    DeleteAtIteratorFila2(aptos[prio]);
 
-	return tid;
+    return tid;
 }

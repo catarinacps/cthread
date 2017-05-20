@@ -1,21 +1,20 @@
 #include "../include/auxlib.h"
 #include <string.h>
 
-int started=0;
-//ucontext_t *contexto;
-
+int started = 0;
+// ucontext_t *contexto;
 
 int ccreate(void *(*start)(void *), void *arg, int prio) {
     TCB_t *tcbMain, *tcbNew;
-	int *ptTidNew;
-	ucontext_t *contexto;
-	
-    if (prio < 0 || prio > 4) { //se a prioridade n eh valida da erro
+    int *ptTidNew;
+    ucontext_t *contexto;
+
+    if (prio < 0 || prio > 4) { // se a prioridade n eh valida da erro
         return -1;
-    }else if(started==0){	//inicializa a lib n primeira vez
-	initializeLib();
-	started=1;
-	//cria tcb da main
+    } else if (started == 0) { // inicializa a lib n primeira vez
+        initializeLib();
+        started = 1;
+        // cria tcb da main
         tcbMain = malloc(sizeof(TCB_t));
 
         tcbMain->tid = getNextTid();
@@ -24,19 +23,19 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
         if (getcontext(&(tcbMain->context)) != 0) {
             return -1;
         }
-		
-        tidExec=tcbMain->tid;
-		
-	contexto=malloc(sizeof(ucontext_t));
-	getcontext(contexto);
-	contexto->uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
+
+        tidExec = tcbMain->tid;
+
+        contexto = malloc(sizeof(ucontext_t));
+        getcontext(contexto);
+        contexto->uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);
         contexto->uc_stack.ss_size = SIGSTKSZ;
         contexto->uc_link = NULL;
-	makecontext(contexto, (void (*)(void))dispatcher, 1,0);
-		
-        tcbMain->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
+        makecontext(contexto, (void (*)(void))dispatcher, 1, 0);
+
+        tcbMain->context.uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);
         tcbMain->context.uc_stack.ss_size = SIGSTKSZ;
-	tcbMain->context.uc_link=contexto;
+        tcbMain->context.uc_link = contexto;
 
         addTCB(tcbMain);
     }
@@ -47,26 +46,26 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
     tcbNew->tid = getNextTid();
     tcbNew->state = 1;
     tcbNew->ticket = prio;
-	
-	//fazer coisas deselegantes
-	contexto=malloc(sizeof(ucontext_t));
-	getcontext(contexto);
-	contexto->uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
+
+    // fazer coisas deselegantes
+    contexto = malloc(sizeof(ucontext_t));
+    getcontext(contexto);
+    contexto->uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);
     contexto->uc_stack.ss_size = SIGSTKSZ;
     contexto->uc_link = NULL;
-	makecontext(contexto, (void (*)(void))dispatcher, 1,0);
+    makecontext(contexto, (void (*)(void))dispatcher, 1, 0);
 
-    tcbNew->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
+    tcbNew->context.uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);
     tcbNew->context.uc_stack.ss_size = SIGSTKSZ;
-	tcbNew->context.uc_link=contexto;
+    tcbNew->context.uc_link = contexto;
     makecontext(&(tcbNew->context), (void (*)(void))start, 1, arg);
-	
-	//tcbNew->context.uc_link=contexto;
+
+    // tcbNew->context.uc_link=contexto;
     addTCB(tcbNew);
-	
-	ptTidNew=malloc(sizeof(int));
-	*ptTidNew=tcbNew->tid;
-	AppendFila2(aptos[prio], (void *)ptTidNew);
+
+    ptTidNew = malloc(sizeof(int));
+    *ptTidNew = tcbNew->tid;
+    AppendFila2(aptos[prio], (void *)ptTidNew);
 
     return tcbNew->tid;
 }
@@ -120,7 +119,7 @@ int cjoin(int tid) {
     ESPERA *aux;
 
     nodo = esperando;
-	
+
     if (!(tcbAux = findTCB(tid))) {
         return -1;
     }
@@ -155,8 +154,8 @@ int cjoin(int tid) {
 
             getcontext(&(tcbAux->context));
         } else {
-            return -1;	//thread a ser esperada ja esta
-        }				//sendo esperada por outra
+            return -1; // thread a ser esperada ja esta
+        } // sendo esperada por outra
     }
     if (tcbAux->state == 3) {
         dispatcher(-1);
@@ -165,10 +164,10 @@ int cjoin(int tid) {
 }
 
 int csem_init(csem_t *sem, int count) {
-    
+
     if (count >= 0) {
         sem->count = count;
-	sem->fila = malloc(sizeof(PFILA2));
+        sem->fila = malloc(sizeof(PFILA2));
         // add lista de semaforos da auxlib?
         if (CreateFila2(sem->fila) != 0) {
             return -1;

@@ -57,7 +57,7 @@ LISTA *removeLista(LISTA *lista, int pos) {
             } else {
                 nodo = nodo->prox;
                 free(nodo->ant);
-                
+
                 return nodo;
             }
         } else {
