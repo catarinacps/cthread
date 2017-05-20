@@ -11,14 +11,12 @@ void dispatcher(int terminado) {
     int *ptTidBloq;
     LISTA *nodo;
     ESPERA *aux;
-	
-	printf(" entrei no dispatcher ");
 
     if (terminado == 0) {
         retThread = findTCB(tidExec);
         retThread->state = 4;
 
-        if (!emptyLista(esperando)) { printf(" tem alguem esperando ");
+        if (!emptyLista(esperando)) {
             nodo = esperando;
             aux = (ESPERA *)nodo->dados;
 
@@ -29,7 +27,7 @@ void dispatcher(int terminado) {
                 }
             }
 
-            if (aux->tidEsperado == tidExec) { printf(" achou o esperado ");
+            if (aux->tidEsperado == tidExec) {
                 bloqThread = findTCB(aux->tidBloqueado);
                 ptTidBloq = malloc(sizeof(int));
                 *ptTidBloq = bloqThread->tid;
@@ -58,26 +56,6 @@ void dispatcher(int terminado) {
 int getNextTid() {
     return lastTid++;
 }
-
-/* acho q n vamos mais usar essa merda!!!!
-TCB_t * findNodeExec() {
-    LISTA *auxPt;
-    TCB_t *auxTCB;
-
-    auxPt = getFirstNodeLista(threads);
-    auxTCB = (TCB_t *)auxPt->dado;
-    while (auxTCB->state != 2 && auxPt != NULL) {
-        auxPt = getNextNodeLista(threads);
-        auxTCB = (TCB_t *)auxPt->dado;
-    }
-
-    if (auxPt == NULL) {
-        return -1;
-    } else {
-        return auxTCB;
-    }
-}
-*/
 
 // inicializa listas e filas
 void initializeLib() {

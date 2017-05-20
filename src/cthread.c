@@ -13,9 +13,9 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
     if (prio < 0 || prio > 4) { //se a prioridade n eh valida da erro
         return -1;
     }else if(started==0){	//inicializa a lib n primeira vez
-		initializeLib();
-		started=1;
-		//cria tcb da main
+	initializeLib();
+	started=1;
+	//cria tcb da main
         tcbMain = malloc(sizeof(TCB_t));
 
         tcbMain->tid = getNextTid();
@@ -27,16 +27,16 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
 		
         tidExec=tcbMain->tid;
 		
-		contexto=malloc(sizeof(ucontext_t));
-		getcontext(contexto);
-		contexto->uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
+	contexto=malloc(sizeof(ucontext_t));
+	getcontext(contexto);
+	contexto->uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
         contexto->uc_stack.ss_size = SIGSTKSZ;
         contexto->uc_link = NULL;
-		makecontext(contexto, (void (*)(void))dispatcher, 1,0);
+	makecontext(contexto, (void (*)(void))dispatcher, 1,0);
 		
         tcbMain->context.uc_stack.ss_sp = (char *) malloc(SIGSTKSZ);
         tcbMain->context.uc_stack.ss_size = SIGSTKSZ;
-		tcbMain->context.uc_link=contexto;
+	tcbMain->context.uc_link=contexto;
 
         addTCB(tcbMain);
     }
@@ -121,15 +121,13 @@ int cjoin(int tid) {
 
     nodo = esperando;
 	
-    if (!(tcbAux = findTCB(tid))) {printf("if besta1");
+    if (!(tcbAux = findTCB(tid))) {
         return -1;
     }
-    if (tcbAux->state == 4) {printf("if besta2");
+    if (tcbAux->state == 4) {
         return -1;
     }
-	printf("ifs bestas");
     if (emptyLista(esperando)) {
-		printf("if1");
         tcbAux = findTCB(tidExec);
         tcbAux->state = 3;
 
@@ -140,13 +138,13 @@ int cjoin(int tid) {
 
         getcontext(&(tcbAux->context));
 
-    } else { printf("elsif1");
+    } else {
         do {
             aux = (ESPERA *)nodo->dados;
             nodo = getNextNodeLista(esperando);
         } while (aux->tidEsperado != tid && nodo != NULL);
 
-        if (nodo == NULL && aux->tidEsperado != tid) {printf("if2");
+        if (nodo == NULL && aux->tidEsperado != tid) {
             tcbAux = findTCB(tidExec);
             tcbAux->state = 3;
 
@@ -156,13 +154,13 @@ int cjoin(int tid) {
             esperando = insertLista(esperando, (void *)aux);
 
             getcontext(&(tcbAux->context));
-        } else {printf("elsif2");
+        } else {
             return -1;	//thread a ser esperada ja esta
         }				//sendo esperada por outra
     }
-    if (tcbAux->state == 3) {printf("if3");
+    if (tcbAux->state == 3) {
         dispatcher(-1);
-    }printf("else if 3");
+    }
     return 0;
 }
 
@@ -170,6 +168,7 @@ int csem_init(csem_t *sem, int count) {
     
     if (count >= 0) {
         sem->count = count;
+	sem->fila = malloc(sizeof(PFILA2));
         // add lista de semaforos da auxlib?
         if (CreateFila2(sem->fila) != 0) {
             return -1;
