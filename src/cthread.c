@@ -14,15 +14,14 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
     } else if (started == 0) { // inicializa a lib n primeira vez
         initializeLib();
         started = 1;
+    } if (emptyTCBList()) {
         // cria tcb da main
         tcbMain = malloc(sizeof(TCB_t));
 
         tcbMain->tid = getNextTid();
         tcbMain->state = 2;
         tcbMain->ticket = 0;
-        if (getcontext(&(tcbMain->context)) != 0) {
-            return -1;
-        }
+        getcontext(&(tcbMain->context));
 
         tidExec = tcbMain->tid;
 
