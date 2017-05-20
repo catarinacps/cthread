@@ -50,9 +50,16 @@ LISTA *removeLista(LISTA *lista, int pos) {
 
     if (emptyLista(lista) == 0) {
         if (pos == 0) {
-            nodo = nodo->prox;
-            free(nodo->ant);
-            return nodo;
+            if (nodo->prox == NULL) {
+                free(nodo);
+
+                return NULL;
+            } else {
+                nodo = nodo->prox;
+                free(nodo->ant);
+                
+                return nodo;
+            }
         } else {
             for (i = 0; i < pos; i++) {
                 if (nodo->prox == NULL) {
