@@ -24,5 +24,7 @@ $(TARGET): $(OBJ) bin/support.o
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
+.PHONY: clean
+
 clean:
 	rm -f $(ODIR)/*.o $(IDIR)/*~ $(LDIR)/*.a *~

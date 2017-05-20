@@ -1,3 +1,12 @@
+/*  -- The compact threads library --
+*
+*  Definição das funções da interface
+*
+*  @authors: Henrique Correa Pereira da Silva
+*            Nicolas Eymael da Silva
+*            Gabriel Stefaniak Niemiec
+*/
+
 #include "../include/auxlib.h"
 #include <string.h>
 
@@ -69,6 +78,7 @@ int ccreate(void *(*start)(void *), void *arg, int prio) {
 
     return tcbNew->tid;
 }
+
 ///-----------------------------------------------------------------------------------------------------------------
 int csetprio(int tid, int prio) {
     TCB_t *tcbAux;
@@ -88,6 +98,7 @@ int csetprio(int tid, int prio) {
         return ERRO;
     }
 }
+
 ///-----------------------------------------------------------------------------------------------------------------
 int cyield(void) {
     int *ptTidExec;
@@ -114,6 +125,7 @@ int cyield(void) {
         return OK;
     }
 }
+
 ///-----------------------------------------------------------------------------------------------------------------
 int cjoin(int tid) {
     TCB_t *tcbAux;
@@ -166,6 +178,7 @@ int cjoin(int tid) {
     }
     return OK;
 }
+
 ///-----------------------------------------------------------------------------------------------------------------
 int csem_init(csem_t *sem, int count) {
     if (started == 0) { // inicializa a lib na primeira vez
@@ -180,12 +193,15 @@ int csem_init(csem_t *sem, int count) {
         if (CreateFila2(sem->fila) != 0) {
             return ERRO;
         } else {
+            semaforos = insertLista(semaforos, (void *)sem);
+
             return OK;
         }
     } else {
         return ERRO;
     }
 }
+
 ///-----------------------------------------------------------------------------------------------------------------
 int cwait(csem_t *sem) {
     TCB_t *tcbAux;
