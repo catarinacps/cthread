@@ -112,7 +112,7 @@ void *Philosophers(void *arg) {
 
 	*(status+2*i)='D';
 	state[i] = DONE;
-	return;
+	return NULL;
 }
 
 
@@ -120,7 +120,7 @@ void *Philosophers(void *arg) {
  
 int	main(int argc, char *argv[]) {
 	int 	ThreadId[N];
-	int	i,ret;
+	int	i,ret=0;
         	
         srand((unsigned)time(NULL));
 
@@ -141,8 +141,10 @@ int	main(int argc, char *argv[]) {
 
         printf("#\n# The dinner will begin...\n");
 
-	for(i = 0; i < N; i++)
-	   ret = cjoin(ThreadId[i]);
+	for(i = 0; i < N-1; i++){
+	   if((ret = cjoin(ThreadId[i])));
+	   
+	}
 
         printf("\n# Diner ends... All philosophers goes to sleep...\n\n\n");	   
 }

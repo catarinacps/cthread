@@ -1,7 +1,7 @@
 #include "../include/auxlib.h"
 #include "../include/support.h"
 
-int lastTid = TID_MAIN;
+int lastTid = TID_MAIN;	// o tid inicia em zero
 int tidExec = TID_MAIN; // pelo menos no inicio
 
 void dispatcher(int terminado) {
@@ -10,57 +10,55 @@ void dispatcher(int terminado) {
     LISTA *nodo;
     ESPERA *aux;
 
-    if (terminado == 0) {
+    if (terminado == 1) {				
         retThread = findTCB(tidExec);
-        retThread->state = 4;
+        retThread->state = 4; // estado term
 
-        if (!emptyLista(esperando)) {
-            nodo = esperando;
-            aux = (ESPERA *)nodo->dados;
-
-            while (aux->tidEsperado != tidExec && nodo != NULL) {
-                nodo = getNextNodeLista(esperando);
-                if (nodo != NULL) {
-                    aux = (ESPERA *)nodo->dados;
-                }
+        if (!emptyLista(esperando)) {								///////////////////////////
+            nodo = esperando;										// CJOIN PART2
+            aux = (ESPERA *)nodo->dados;							// 
+																	// tem alguem bloqueado esperando
+            while (aux->tidEsperado != tidExec && nodo != NULL) {	// entao:
+                nodo = getNextNodeLista(esperando);					//  procurar se essa thread que acabou
+                if (nodo != NULL) {									//  de terminar estava sendo esperada por outra
+                    aux = (ESPERA *)nodo->dados;					//
+                }													///////////////////////////
             }
 
-            if (aux->tidEsperado == tidExec) {
-                bloqThread = findTCB(aux->tidBloqueado);
-                ptTidBloq = malloc(sizeof(int));
-                *ptTidBloq = bloqThread->tid;
-                bloqThread->state = 1;
-                AppendFila2(aptos[bloqThread->ticket], (void *)ptTidBloq);
-                esperando = removeLista(nodo, 0);
+            if (aux->tidEsperado == tidExec) {								///////////////////////////
+                bloqThread = findTCB(aux->tidBloqueado);					//
+                ptTidBloq = malloc(sizeof(int));							// ela estava sendo esperada por outra...
+                *ptTidBloq = bloqThread->tid;								//
+                bloqThread->state = 1; // estado apto						// passar a outra pra apto e
+                AppendFila2(aptos[bloqThread->ticket], (void *)ptTidBloq);	// remove-la da lista de bloqueados
+                esperando = removeLista(nodo, 0);							///////////////////////////
             }
         }
     }
 
-    if (!emptyAptos()) {
-        tidExec = nextApto();
-        proxThread = findTCB(tidExec);
-
-        proxThread->state = 2;
-
-        setcontext(&(proxThread->context));
-    } else {
-        printf("PODE SEPA SER EXECUTADA? VER COM CECHIN FALANDO NISSO EAE "
-               "CECHIN BELEZA TUDO BEM COMO FOI O DIA DESTE BELO PROFESSOR "
-               "ENSINA MUITO BEM 10/10 <3");
+    if (!emptyAptos()) {			
+        tidExec = nextApto();  /// UNICA INSTRUÇAO QUE MODIFICA tidExec		
+        proxThread = findTCB(tidExec);										/////////////////////////
+																			//
+        proxThread->state = 2; // estado exec								//	ESCALONAMENTO
+																			//	PADRÃO
+        setcontext(&(proxThread->context));									//
+    } else {																/////////////////////////
+        printf("ALGO MUITO ERRADO ESTÁ ACONTECENDO");		
     }
 }
 // 0: Criacao; 1: Apto; 2: Execucao; 3: Bloqueado e 4: Termino
-
+///-----------------------------------------------------------------------------------------------------------------
 int getNextTid() {
     return lastTid++;
 }
-
-// inicializa listas e filas
-void initializeLib() {
+///-----------------------------------------------------------------------------------------------------------------
+// inicializa listas e filas globais
+void initializeLib() {		
     int i;
     threads = initLista();
-    esperando = threads;
-    semaforos = threads;
+    esperando = initLista();
+    semaforos = initLista();
     for (i = 0; i < 4; i++)
         aptos[i] = malloc(sizeof(PFILA2));
     CreateFila2(aptos[0]);
@@ -68,22 +66,22 @@ void initializeLib() {
     CreateFila2(aptos[2]);
     CreateFila2(aptos[3]);
 }
-
+///-----------------------------------------------------------------------------------------------------------------
 // diz se a lista de threads está vazia
 int emptyTCBList() {
     return emptyLista(threads);
 }
-
+///-----------------------------------------------------------------------------------------------------------------
 // adiciona um TCB a lista de threads
 void addTCB(TCB_t *tcb) {
     threads = insertLista(threads, (void *)tcb);
 }
-
+///-----------------------------------------------------------------------------------------------------------------
 // retorna o endereço do TCB com a tid se encontrado, senao retorna NULL
 TCB_t *findTCB(int tid) {
     return (TCB_t *)getNodeLista(threads, tid);
 }
-
+///-----------------------------------------------------------------------------------------------------------------
 // troca de fila de prioridades
 void changePrioFIFO(int prio_velha, int prio_nova, int tid) {
     int *dado_tid, achou = 0;
@@ -103,7 +101,7 @@ void changePrioFIFO(int prio_velha, int prio_nova, int tid) {
 
     AppendFila2(aptos[prio_nova], (void *)dado_tid); // adiciona na outra fila
 }
-
+///-----------------------------------------------------------------------------------------------------------------
 // retorna 1 se nao ha aptos, senao retorna 0
 int emptyAptos() {
     if ((FirstFila2(aptos[0]) != 0) && (FirstFila2(aptos[1]) != 0) &&
@@ -113,8 +111,8 @@ int emptyAptos() {
         return 0;
     }
 }
-
-// remove apto de maior prioridade e retorna tid
+///-----------------------------------------------------------------------------------------------------------------
+// remove apto de maior prioridade da fila e retorna seu tid
 int nextApto() {
     int tid, prio;
     // pelo projeto do dispatcher, garante-se q ha aptos

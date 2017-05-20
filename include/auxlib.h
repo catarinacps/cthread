@@ -7,13 +7,15 @@
 
 
 #define TID_MAIN 0
+#define ERRO -1
+#define OK 0
 
 LISTA *threads, *esperando, *semaforos;
 PFILA2 aptos[4];
 
 struct esperanca{
 	int tidEsperado;
-	int tidBloqueado;	//botar TCB*?
+	int tidBloqueado;
 };
 typedef struct esperanca ESPERA;
 
