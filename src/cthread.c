@@ -263,7 +263,15 @@ int csem_init(csem_t *sem, int count) {
     }
 }
 
-///-----------------------------------------------------------------------------------------------------------------
+/**
+ *  Função que utiliza o recurso sinalizado pelo semaforo dado, caso o tal recurso esteja   
+ *	disponivel.
+ *	Se não há recurso disponivel, a thread atual é bloqueada e inserida na 
+ *	fila de bloqueados do semaforo.
+ *
+ *  @param  *sem    Ponteiro para a variável de semáforo que gerencia o recurso
+ *  @return         Um int representando um booleano em caso de sucesso ou erro
+*/
 int cwait(csem_t *sem) {
     TCB_t *tcbAux;
     int *tidBloqueado;
@@ -298,7 +306,15 @@ int cwait(csem_t *sem) {
         }
     }
 }
-///-----------------------------------------------------------------------------------------------------------------
+
+/**
+ *  Função que libera o recurso sinalizado pelo semaforo dado.
+ *  Caso alguma thread esteja na fila de bloqueados do semaforo esperando pelo
+ *	recurso, esta é posta na fila de aptos.
+ *
+ *  @param  *sem    Ponteiro para a variável de semáforo que gerencia o recurso
+ *  @return         Um int representando um booleano em caso de sucesso ou erro
+*/
 int csignal(csem_t *sem) {
     int tidBloqueado, *tidApto;
     TCB_t *tcbApto;
@@ -329,7 +345,15 @@ int csignal(csem_t *sem) {
         }
     }
 }
-///-----------------------------------------------------------------------------------------------------------------
+
+/**
+ *  Função que copia os nomes e cartoes dos desenvolvedores desta biblioteca para uma string dada.
+ *	Só consegue copiar as informaçoes se o tamanho dado for grande o suficiente para elas.
+ *
+ *  @param  *name   Ponteiro para a area da memoria em que deve ser escrito o string
+ *	@param  size    Quantidade de caracteres que podem ser escritos na string
+ *  @return         Um int representando um booleano em caso de sucesso ou erro
+*/
 int cidentify(char *name, int size) {
     char nomes[120];
 
