@@ -81,14 +81,14 @@ int main(int argc, char **argv)
 {
     int tidBarber, tidCustomer;
 
-    end_time=time(NULL)+20;  /*Barbearia fica aberta 120 s */
+    end_time=time(NULL)+10;  /*Barbearia fica aberta 120 s */
     srand((unsigned)time(NULL));
 
     csem_init(&customers, 0);
     csem_init(&barbers, 1);
     csem_init(&mutex, 1);
 
-    tidBarber = ccreate (barber, (void *) NULL, 0);
+    tidBarber = ccreate (barber, (void *) NULL, 1);
     if (tidBarber < 0 )
        perror("Erro na criação do Barbeiro...\n");
 

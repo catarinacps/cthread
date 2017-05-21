@@ -193,8 +193,6 @@ int csem_init(csem_t *sem, int count) {
         if (CreateFila2(sem->fila) != 0) {
             return ERRO;
         } else {
-            semaforos = insertLista(semaforos, (void *)sem);
-
             return OK;
         }
     } else {
