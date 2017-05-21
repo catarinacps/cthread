@@ -58,7 +58,6 @@ void initializeLib() {
     int i;
     threads = initLista();
     esperando = initLista();
-    semaforos = initLista();
     for (i = 0; i < 4; i++)
         aptos[i] = malloc(sizeof(PFILA2));
     CreateFila2(aptos[0]);

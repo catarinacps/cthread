@@ -50,6 +50,7 @@ void *produtor(void *arg) {
       csignal(&mutex);
       csignal(&cheio);
    }
+   return NULL;
 }
 
 void *consumidor(void *arg) {
@@ -64,6 +65,7 @@ void *consumidor(void *arg) {
       csignal(&mutex);
       csignal(&vazio);
    }
+   return NULL;
 }
 
 int main(int argc, char *argv[ ]) {

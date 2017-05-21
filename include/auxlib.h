@@ -10,7 +10,7 @@
 #define ERRO -1
 #define OK 0
 
-LISTA *threads, *esperando, *semaforos;
+LISTA *threads, *esperando;
 PFILA2 aptos[4];
 
 struct esperanca{

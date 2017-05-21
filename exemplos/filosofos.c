@@ -134,7 +134,6 @@ int	main(int argc, char *argv[]) {
 
 	for(i = 0; i < N; i++) {
 	   if ((ThreadId[i] = ccreate(Philosophers, (void *)i, 0)) == -1) {
-		printf(">>>memes<<< %d/n", i);
 	      exit(0);
 	   }
 	}
