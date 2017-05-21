@@ -26,7 +26,7 @@ void* func1(void *arg) {
 int main(int argc, char *argv[]) {
 
 	int	id0, id1;
-	int i;
+	int i=3;
 
 	id0 = ccreate(func0, (void *)&i, 1);
 	id1 = ccreate(func1, (void *)&i, 1);
