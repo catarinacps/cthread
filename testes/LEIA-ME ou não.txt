@@ -1,0 +1,8 @@
+Os arquivos contidos neste diretório foram utilizados para testar
+a funcionalidade e corretude das seguintes funções:
+	-cidentify();
+	-cyield();
+	-csetprio();
+
+As outras funções da biblioteca foram devidamente testadas utilizando
+os arquivos fornecidos pelo professor no diretório "exemplos".
