@@ -9,11 +9,11 @@
 #ifndef __cdata__
 #define __cdata__
 
-#define	PROCST_CRIACAO	0
-#define	PROCST_APTO	1
-#define	PROCST_EXEC	2
-#define	PROCST_BLOQ	3
-#define	PROCST_TERMINO	4
+#define	STATE_CRIACAO	0
+#define	STATE_APTO		1
+#define	STATE_EXEC		2
+#define	STATE_BLOQ		3
+#define	STATE_TERMINO	4
 
 /* NAO ALTERAR ESSA struct */
 typedef struct s_TCB {

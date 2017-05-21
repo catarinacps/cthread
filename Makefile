@@ -1,30 +1,51 @@
+#	-- The compact threads library --
+#
+#	Makefile do arquivo da library estática
+#
+#	@param target
+#		Pode ser "all" ou "clean", sendo que "all"
+#		compila a library e "clean" limpa todos arquivos criados
+#
+#	@authors	Henrique Correa Pereira da Silva
+#				Nicolas Eymael da Silva
+#				Grabriel Stefaniak Niemiec
+
+#	Flags de compilaçao. Debug para uso no GDB
 CC = gcc
-CFLAGS = -I$(IDIR) -Wall --debug
+DEBUG = -g
+CFLAGS = -I$(INC_DIR) -Wall $(DEBUG)
 
-IDIR = include
-ODIR = obj
-LDIR = lib
-SDIR = src
+#	Diretorios do projeto
+INC_DIR = include
+OBJ_DIR = bin
+LIB_DIR = lib
+SRC_DIR = src
 
-TARGET = lib/libcthread.a
+#	Caminho do arquivo estático final da library
+TARGET = $(LIB_DIR)/libcthread.a
 
-#LIBS = -lm
-
+#	Dependencias, ou seja, arquivos de header
 _DEPS = auxlib.h lista.h cthread.h cdata.h support.h
-DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
 
+#	Objetos a serem criados
 _OBJ = cthread.o lista.o auxlib.o
-OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
+
+#	Exceções para a regra "clean"
+_EXP = support.o
+EXP = $(patsubst %,$(OBJ_DIR)/%,$(_EXP))
+
 
 all: $(TARGET)
 
-$(TARGET): $(OBJ) bin/support.o
+$(TARGET): $(OBJ) $(EXP)
 	ar rcs $@ $^
 
-$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 .PHONY: clean
 
 clean:
-	rm -f $(ODIR)/*.o $(IDIR)/*~ $(LDIR)/*.a *~
+	rm -f $(OBJ_DIR)/*.o $(INC_DIR)/*~ $(LIB_DIR)/*.a *~ -- !($(EXP))

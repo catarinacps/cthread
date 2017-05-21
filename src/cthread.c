@@ -1,96 +1,139 @@
-/*  -- The compact threads library --
-*
-*  Definição das funções da interface
-*
-*  @authors: Henrique Correa Pereira da Silva
-*            Nicolas Eymael da Silva
-*            Gabriel Stefaniak Niemiec
+/** 
+ *  -- The compact threads library --
+ *       Sistemas Operacionais 1
+ *              INF01142
+ *               2017/1
+ *
+ *  Definição das funções da interface
+ *
+ *  @authors    Henrique Correa Pereira da Silva
+ *              Nicolas Eymael da Silva
+ *              Gabriel Stefaniak Niemiec
 */
 
 #include "../include/auxlib.h"
 #include <string.h>
 
+/**
+ *  Variável global de controle da inicialização das estruturas utilizadas
+ *  nas funções, como as filas de aptos, a lista de threads e a lista de threads
+ *  esperando a liberação de recursos.
+ *  É necessário manter essa informação global, já que o usuário não necessariamente
+ *  usará alguma função antes das outras (eg. inicializa um semáforo antes de criar
+ *  uma thread).
+ *
+ *  @see initializeLib();
+*/
 int started = 0;
 
+/**
+ *  Função que cria uma thread que executará a função recebida pelo argumento
+ *  start na prioridade definida pelo argumento prio. A thread será iniciada na
+ *  fila de apto correspondente.
+ *  Além disso, se for a primeira chamada, a função também deve inicializar a thread
+ *  main, que terá a prioridade definida como máxima e que, além disso, não possui
+ *  nenhuma diferença das outras threads (ou seja, a execução do programa não fica
+ *  presa a existência da thread main).
+ *
+ *  @param  start   O nome da funçao que a thread executará
+ *  @param  arg     Um ponteiro para uma estrutura de parâmetros, caso necessário
+ *  @param  prio    Prioridade da thread a ser criada
+ *  @return         O "tid", ou seja, Thread ID
+ *  @see            TCB_t
+*/
 int ccreate(void *(*start)(void *), void *arg, int prio) {
     TCB_t *tcbMain, *tcbNew;
     int *ptTidNew;
-    ucontext_t *contextoDisp;
+    ucontext_t *dispContext;                // contexto do dispatcher
 
-    if (prio < 0 || prio > 4) { // se a prioridade não é valida dá erro
+    if (prio < 0 || prio > 4) {             // se a prioridade não é valida dá erro
         return ERRO;
-    } else if (started == 0) { // inicializa a lib na primeira vez
+    } else if (started == 0) {              // inicializa a lib na primeira vez
         initializeLib();
         started = 1;
-    } 
-	
-	if (emptyTCBList()) {	// se a lista de threads está vazia
-							// precisamos criar a tcb da main
-        tcbMain = malloc(sizeof(TCB_t));
+    }
+
+    if (emptyTCBList()) {                   // se a lista de threads está vazia
+        tcbMain = malloc(sizeof(TCB_t));    // precisamos criar a tcb da main
 
         tcbMain->tid = getNextTid();
-        tcbMain->state = 2;		// estado exec
+        tcbMain->state = STATE_EXEC;        // estado exec
         tcbMain->ticket = 0;
         getcontext(&(tcbMain->context));
 
         tidExec = tcbMain->tid;
 
-        contextoDisp = malloc(sizeof(ucontext_t));						///////////////////////
-        getcontext(contextoDisp);
-        contextoDisp->uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);
-        contextoDisp->uc_stack.ss_size = SIGSTKSZ;						// ajusta contexto do dispatcher
-        contextoDisp->uc_link = NULL;
-        makecontext(contextoDisp, (void (*)(void))dispatcher, 1, 1);	///////////////////////
+        // o bloco a seguir ajusta o contexto do dispatcher
+        dispContext = malloc(sizeof(ucontext_t));
+        getcontext(dispContext);
+        dispContext->uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);
+        dispContext->uc_stack.ss_size = SIGSTKSZ;
+        dispContext->uc_link = NULL;
+        makecontext(dispContext, (void (*)(void))dispatcher, 1, 1);
 
+        // o bloco a seguir define o return context da thread, que no caso é a main
+        // assim, quando a main terminar, irá para o dispatcher
         tcbMain->context.uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);
         tcbMain->context.uc_stack.ss_size = SIGSTKSZ;
-        tcbMain->context.uc_link = contextoDisp;	// após a main, chamar dispatcher
+        tcbMain->context.uc_link = dispContext;
 
+        // adiciona a TCB_t à lista de threads
         addTCB(tcbMain);
     }
 
-	// criar a nova tcb e adicionar à lista de threads
-	
+    // cria a nova tcb e a adiciona à lista de threads
     tcbNew = malloc(sizeof(TCB_t));
 
     getcontext(&(tcbNew->context));
     tcbNew->tid = getNextTid();
-    tcbNew->state = 1;	// estado apto
+    tcbNew->state = STATE_APTO;              // estado apto
     tcbNew->ticket = prio;
 
-    contextoDisp = malloc(sizeof(ucontext_t));					////////////////////
-    getcontext(contextoDisp);
-    contextoDisp->uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);	// ajusta contexto do dispatcher
-    contextoDisp->uc_stack.ss_size = SIGSTKSZ;
-    contextoDisp->uc_link = NULL;
-    makecontext(contextoDisp, (void (*)(void))dispatcher, 1, 1);///////////////////
+    // o bloco a seguir ajusta o contexto do dispatcher
+    dispContext = malloc(sizeof(ucontext_t));
+    getcontext(dispContext);
+    dispContext->uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);
+    dispContext->uc_stack.ss_size = SIGSTKSZ;
+    dispContext->uc_link = NULL;
+    makecontext(dispContext, (void (*)(void))dispatcher, 1, 1);
 
+    // o bloco a seguir define o return context da thread nova
+    // assim, quando a thread terminar, irá para o dispatcher
     tcbNew->context.uc_stack.ss_sp = (char *)malloc(SIGSTKSZ);
     tcbNew->context.uc_stack.ss_size = SIGSTKSZ;
-    tcbNew->context.uc_link = contextoDisp;						// quando a thread terminar, chamar dispatcher
+    tcbNew->context.uc_link = dispContext;
     makecontext(&(tcbNew->context), (void (*)(void))start, 1, arg);
 
+    // adiciona a thread à lista de threads
     addTCB(tcbNew);
 
+    // e insere a nova thread na fila de aptos
     ptTidNew = malloc(sizeof(int));
     *ptTidNew = tcbNew->tid;
-    AppendFila2(aptos[prio], (void *)ptTidNew);		// insere a nova thread na fila de aptos
+    AppendFila2(aptos[prio], (void *)ptTidNew);
 
     return tcbNew->tid;
 }
 
-///-----------------------------------------------------------------------------------------------------------------
+/**
+ *  Função que altera a prioridade de uma thread, dado o parâmetro tid e o parâmetro prio
+ *  recebidos.
+ *
+ *  @param  tid     Identificador da thread que terá sua prioridade alterada
+ *  @param  prio    Nova prioridade da thread
+ *  @return         Um int representando um booleano em caso de sucesso ou erro
+*/
 int csetprio(int tid, int prio) {
     TCB_t *tcbAux;
 
-    if (prio < 0 || prio > 4) {     // se a prioridade não é valida dá erro
+    if (prio < 0 || prio > 4) {
         return ERRO;
-    }
-	
+    } // se a prioridade não é valida retorna-se erro
+
     if ((tcbAux = findTCB(tid))) {
-        if (tcbAux->state == 1) {  // estado apto
+        if (tcbAux->state == 1) {
             changePrioFIFO(tcbAux->ticket, prio, tid);
-        }
+        } // estado apto
         tcbAux->ticket = prio;
 
         return OK;
@@ -99,7 +142,12 @@ int csetprio(int tid, int prio) {
     }
 }
 
-///-----------------------------------------------------------------------------------------------------------------
+/**
+ *  Função que sinaliza ao escalonador que a thread que a chamou não necessita mais
+ *  ser executada, sendo assim posta na fila de aptos.
+ *
+ *  @return         Um int representando um booleano em caso de sucesso ou erro
+*/
 int cyield(void) {
     int *ptTidExec;
     TCB_t *tcbExec;
@@ -111,22 +159,28 @@ int cyield(void) {
         *ptTidExec = tidExec;
 
         tcbExec = findTCB(tidExec);
-		
-        if (AppendFila2(aptos[tcbExec->ticket], (void *)ptTidExec) == 0) { //pega a thread executando no momento
-            tcbExec->state = 1;	// estado apto								 e passa ela para apto
-            getcontext(&(tcbExec->context));
+
+        // se for bem sucedida ao inserir a thread na lista de aptos
+        if (AppendFila2(aptos[tcbExec->ticket], (void *)ptTidExec) ==0) {
+            tcbExec->state = STATE_APTO;        // altera o estado para apto
+            getcontext(&(tcbExec->context));    // define o contexto da thread NESSE ponto
         } else {
             return ERRO;
         }
 
-        if (tcbExec->state == 1) { // estado apto...time loop enemy
+        if (tcbExec->state == 1) {              // se o estado for apto (teste para quando a thread retornar ao ponto acima)
             dispatcher(-1);
         }
         return OK;
     }
 }
 
-///-----------------------------------------------------------------------------------------------------------------
+/**
+ *  Função que sinaliza a intenção de espera da thread que chamou a outra thread, definida pelo parametro tid.
+ *
+ *  @param  tid     Identificador da thread que será esperada
+ *  @return         Um int representando um booleano em caso de sucesso ou erro
+*/
 int cjoin(int tid) {
     TCB_t *tcbAux;
     LISTA *nodo;
@@ -134,62 +188,71 @@ int cjoin(int tid) {
 
     nodo = esperando;
 
-    if (!(tcbAux = findTCB(tid))) {	//  a thread a ser esperada nao consta na lista de threads
+    if (!(tcbAux = findTCB(tid))) {
         return ERRO;
-    }
-    if (tcbAux->state == 4) { //  a thread a ser esperada ja foi terminada
+    } // se a thread a ser esperada nao consta na lista de threads
+    if (tcbAux->state == 4) {
         return ERRO;
-    }
-	
-    if (emptyLista(esperando)) { 
+    } // se a thread a ser esperada ja foi terminada
+
+    if (emptyLista(esperando)) {
         tcbAux = findTCB(tidExec);
-        tcbAux->state = 3;	// estado bloq
+        tcbAux->state = STATE_BLOQ;                         // estado bloq
 
-        aux = malloc(sizeof(ESPERA));					//////////////////////////////////////////////////////////////
-        aux->tidEsperado = tid;							// se nao tem nenhuma thread esperando outra, só precisamos
-        aux->tidBloqueado = tidExec;					// bloquear a thread atual e inserir ela
-        esperando = insertLista(esperando, (void *)aux);// na lista de espera
-														////////////////////////////////////////////////////////////
+        aux = malloc(sizeof(ESPERA));
+        aux->tidEsperado = tid;                             // se nao tem nenhuma thread esperando outra, só precisamos
+        aux->tidBloqueado = tidExec;                        // bloquear a thread atual e inserir ela
+        esperando = insertLista(esperando, (void *)aux);    // na lista de espera
+
         getcontext(&(tcbAux->context));
-
     } else {
-        do {												//////////////////////////////////////////////////////////////
-            aux = (ESPERA *)nodo->dados;					// se ja tem threads na lista, entao precisamos checar se alguma
-            nodo = getNextNodeLista(esperando);				// delas é a mesma do parametro (ou seja, ja esta sendo esperada)
-        } while (aux->tidEsperado != tid && nodo != NULL);	//////////////////////////////////////////////////////////////
+        do {
+            aux = (ESPERA *)nodo->dados;                    // se ja tem threads na lista, entao
+                                                            // precisamos checar se alguma
+            nodo = getNextNodeLista(esperando);             // delas é a mesma do parametro
+                                                            // (ou seja, ja esta sendo
+                                                            // esperada)
+        } while (aux->tidEsperado != tid && nodo != NULL);
 
         if (nodo == NULL && aux->tidEsperado != tid) {
-            tcbAux = findTCB(tidExec);							//////////////////////////////////////////////////////////////
-            tcbAux->state = 3; // estado bloq
+            tcbAux = findTCB(
+                tidExec);
+            tcbAux->state = STATE_BLOQ;                     // estado bloq
 
-            aux = malloc(sizeof(ESPERA));						// a thread nao está sendo esperada ainda, entao só
-            aux->tidEsperado = tid;								// precisamos bloquear a thread atual e inserir ela
-            aux->tidBloqueado = tidExec;						// na lista de espera
-            esperando = insertLista(esperando, (void *)aux);	//////////////////////////////////////////////////////////////
+            aux = malloc(sizeof(ESPERA));                   // a thread nao está sendo esperada ainda, entao só
+            aux->tidEsperado =tid;                          // precisamos bloquear a thread atual e inserir ela
+            aux->tidBloqueado = tidExec;                    // na lista de espera
+            esperando = insertLista(esperando, (void *)aux);
 
-            getcontext(&(tcbAux->context));
-			
+            getcontext(&(tcbAux->context));                 // define o contexto da thread NESSE ponto
+
         } else {
-            return ERRO; 	// thread a ser esperada ja esta sendo esperada por outra
-        } 
+            return ERRO;                                    // thread a ser esperada ja esta sendo esperada por outra
+        }
     }
-    if (tcbAux->state == 3) { // estado bloq...time loop enemy
+    if (tcbAux->state == 3) {                               // se o estado for apto (teste para quando a thread retornar ao ponto acima)
         dispatcher(-1);
     }
     return OK;
 }
 
-///-----------------------------------------------------------------------------------------------------------------
+/**
+ *  Função que inicializa um dado semáforo pelo parâmetro sem e pelo parâmetro count.
+ *
+ *  @param  *sem    Ponteiro para a variável de semáforo a ser iniciada
+ *  @param  count   Contador da variável de semáforo
+ *  @return         Um int representando um booleano em caso de sucesso ou erro
+*/
 int csem_init(csem_t *sem, int count) {
-    if (started == 0) { // inicializa a lib na primeira vez
+    if (started == 0) {                 // inicializa a lib na primeira vez
         initializeLib();
         started = 1;
     }
 
-    if (count >= 0) {	// inicializa o recurso e a fila de bloqueados do semaforo
+    if (count >= 0) {                   // inicializa o recurso e a fila de bloqueados do semaforo
         sem->count = count;
         sem->fila = malloc(sizeof(PFILA2));
-		
+
         if (CreateFila2(sem->fila) != 0) {
             return ERRO;
         } else {
@@ -209,19 +272,22 @@ int cwait(csem_t *sem) {
         return ERRO;
     } else {
         if (sem->count > 0) { // se há recursos disponiveis no semáforo
-            sem->count--;	  // vamos utiliza-lo
+            sem->count--;     // vamos utiliza-lo
 
             return OK;
         } else {
-            tcbAux = findTCB(tidExec);								///////////////////////////////////////////////
+            tcbAux = findTCB(
+                tidExec);      ///////////////////////////////////////////////
             tcbAux->state = 3; // estado bloq
 
-            tidBloqueado = malloc(sizeof(int));						// se NÃO há recursos disponiveis
-            *tidBloqueado = tidExec;								// precisamos bloquear a thread atual
+            tidBloqueado =
+                malloc(sizeof(int)); // se NÃO há recursos disponiveis
+            *tidBloqueado = tidExec; // precisamos bloquear a thread atual
 
-            if (AppendFila2(sem->fila, (void *)tidBloqueado) != 0) {// e inseri-la na lista de bloqueados
-                return ERRO;										// do semáforo
-            }														///////////////////////////////////////////////
+            if (AppendFila2(sem->fila, (void *)tidBloqueado) !=
+                0) {         // e inseri-la na lista de bloqueados
+                return ERRO; // do semáforo
+            }                ///////////////////////////////////////////////
 
             getcontext(&(tcbAux->context));
 
@@ -240,18 +306,21 @@ int csignal(csem_t *sem) {
     if (sem == NULL) {
         return ERRO;
     } else {
-        if (FirstFila2(sem->fila) != 0) {	// nao há nenhuma thread bloqueada nesse semaforo, então ja ta pronto
-			sem->count++;		// desaloca o recurso
+        if (FirstFila2(sem->fila) != 0) { // nao há nenhuma thread bloqueada
+                                          // nesse semaforo, então ja ta pronto
+            sem->count++;                 // desaloca o recurso
             return OK;
         } else {
-            tidBloqueado = *((int *)GetAtIteratorFila2(sem->fila));			//////////////////////////////
-            DeleteAtIteratorFila2(sem->fila);								// 
-																			// pega a primeira thread bloqueada
-            tcbApto = findTCB(tidBloqueado);								// da fila, coloca ela em apto
-            tidApto = malloc(sizeof(int));									// e remove da fila de bloqueados
-            *tidApto = tidBloqueado;										//
-																			//
-            if (AppendFila2(aptos[tcbApto->ticket], (void *)tidApto) == 0) {//////////////////////////////
+            tidBloqueado = *((int *)GetAtIteratorFila2(
+                sem->fila));                  //////////////////////////////
+            DeleteAtIteratorFila2(sem->fila); //
+            // pega a primeira thread bloqueada
+            tcbApto = findTCB(tidBloqueado); // da fila, coloca ela em apto
+            tidApto = malloc(sizeof(int));   // e remove da fila de bloqueados
+            *tidApto = tidBloqueado;         //
+                                             //
+            if (AppendFila2(aptos[tcbApto->ticket], (void *)tidApto) ==
+                0) {                //////////////////////////////
                 tcbApto->state = 1; // estado apto
                 return OK;
             } else {

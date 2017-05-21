@@ -56,10 +56,14 @@ int getNextTid() {
 // inicializa listas e filas globais
 void initializeLib() {		
     int i;
+
     threads = initLista();
     esperando = initLista();
-    for (i = 0; i < 4; i++)
+
+    for (i = 0; i < 4; i++) {
         aptos[i] = malloc(sizeof(PFILA2));
+    }
+    
     CreateFila2(aptos[0]);
     CreateFila2(aptos[1]);
     CreateFila2(aptos[2]);
