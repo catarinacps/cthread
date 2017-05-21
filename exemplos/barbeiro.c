@@ -55,7 +55,7 @@ void* barber(void* arg)
      cut_hair();
      csignal(&barbers);
   }
-  return;
+  return NULL;
 }
 
 void* customer(void* arg)
@@ -74,7 +74,7 @@ void* customer(void* arg)
       }
       sleepao();
     }
-    return;
+    return NULL;
 }
 
 int main(int argc, char **argv)
