@@ -48,4 +48,4 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 .PHONY: clean
 
 clean:
-	rm -f $(OBJ_DIR)/*.o $(INC_DIR)/*~ $(LIB_DIR)/*.a *~ -- !($(EXP))
+	rm -f $(OBJ) $(INC_DIR)/*~ $(LIB_DIR)/*.a *~
