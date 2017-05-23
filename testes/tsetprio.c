@@ -12,12 +12,12 @@
 #include "../include/cthread.h"
 #include <stdio.h>
 
-void* func0(void) {
+void* func0(void *arg) {
 	printf("Eu sou nao serei impresso. hahahaha");
 	return NULL;
 }
 
-void* func1(void) {
+void* func1(void *arg) {
 	printf("Eu fui impresso. hehehehehe");
 	return NULL;
 }
@@ -26,7 +26,6 @@ void* func1(void) {
 int main(int argc, char *argv[]) {
 
 	int	id1;
-	int i;
 
 	ccreate(func0, (void *) NULL, 1);
 	id1 = ccreate(func1, (void *) NULL, 1);
